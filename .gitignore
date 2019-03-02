@@ -7,10 +7,12 @@ __pycache__/
 *.so
 
 # StarCraft II
-
+.SC2replay
+replays/
+filtered_replays/
 
 # Distribution / packaging
-.Python
+.Pythongit 
 build/
 develop-eggs/
 dist/
