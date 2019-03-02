@@ -1,0 +1,1 @@
+Extracts data from a set of StarCraft II replays.
