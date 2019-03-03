@@ -28,7 +28,7 @@ flags.DEFINE_integer(name = 'max_mmr', default = None, help = 'The maximum MMR o
 FLAGS(sys.argv)
 
 
-def valid_replay(info, ping):
+def valid_replay(info):
 
     if info.HasField("error"):
         return False
@@ -100,10 +100,7 @@ def filter_replays(counter, replays_path, save_path, batch_size, run_config):
                 
                 info = controller.replay_info(replay_data)
 
-                info = controller.replay_info(replay_data)
-                ping = ping = controller.ping()
-
-                if valid_replay(info, ping):
+                if valid_replay(info):
                     print('================================================================================ Found valid game #' + str(index + 1))
 
                     replay_name = replay_path.split('\\')
@@ -118,7 +115,7 @@ def main(argv):
     counter = Value('i', 0)     # Lock so the processes don't work on the same replays
     run_config = run_configs.get()
 
-    for i in range(FLAGS.n_instance):
+    for _ in range(FLAGS.n_instance):
         p = Process(target = filter_replays, args = [
             counter, 
             FLAGS.replays_path, 
@@ -126,6 +123,7 @@ def main(argv):
             FLAGS.batch_size,
             run_config])
         jobs.append(p)
+        p.daemon = True
         p.start()
     
     # Wait for each process to finish.
@@ -143,5 +141,6 @@ if __name__ == "__main__":
             FLAGS.save_path, 
             FLAGS.batch_size,
             run_config)
+    
     
     #app.run(main)
