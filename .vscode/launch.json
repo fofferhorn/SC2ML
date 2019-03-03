@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "externalTerminal",
-            "args": ["--n_instance", "4", "--min_mmr", "0"]
+            "args": ["--n_instance", "4"]
         },
         {
             "name": "Python: Terminal (integrated)",

@@ -84,27 +84,26 @@ def filter_replays(counter, replays_path, save_path, batch_size, run_config):
                 i = counter.value
                 counter.value += 1
 
-                batch_start = i * batch_size
-                batch_end = i * batch_size + batch_size
+            batch_start = i * batch_size
+            batch_end = i * batch_size + batch_size
 
-                print('batch_start: ' + str(batch_start) + ' batch_end: ' + str(batch_end))
-                
-                for index in range(batch_start, batch_end):
-                    print('================================================================================ Processing replay #' + str(index + 1))
+            for index in range(batch_start, batch_end):
+                print('================================================================================ Processing replay #' + str(index + 1))
 
-                    replay_path = replay_paths[index]
+                replay_path = replay_paths[index]
 
-                    replay_data = run_config.replay_data(replay_path)
+                replay_data = run_config.replay_data(replay_path)
 
-                    info = controller.replay_info(replay_data)
+                info = controller.replay_info(replay_data)
 
-                    if valid_replay(info):
-                        print('================================================================================ Found valid game #' + str(index + 1))
+                if valid_replay(info):
+                    print('================================================================================ Found valid game #' + str(index + 1))
 
-                        replay_name = replay_path.split('\\')
+                    replay_name = replay_path.split('\\')
 
-                        replay_save_path = os.path.join(cwd, save_path, replay_name[-1])
-                        copyfile(replay_path, replay_save_path)
+                    replay_save_path = os.path.join(cwd, save_path, replay_name[-1])
+
+                    copyfile(replay_path, replay_save_path)
 
 
 def main(argv):

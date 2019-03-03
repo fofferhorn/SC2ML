@@ -13,8 +13,8 @@ from s2clientprotocol import sc2api_pb2 as sc_pb
 FLAGS = flags.FLAGS
 
 # General settings
-flags.DEFINE_string(name = 'replays_path', default = 'replays', help = 'The path to the replays to filter from the current directory.')
-flags.DEFINE_string(name = 'save_path', default = 'filtered_replays', help = 'The path to the folder to save the replays in from the current directory.')
+flags.DEFINE_string(name = 'replays_path', default = 'filtered_replays', help = 'The path to the replays to extract actions from the current directory.')
+flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'The path to the folder to save the replays in from the current directory.')
 flags.DEFINE_integer(name = 'n_instance', default = 8, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
@@ -80,6 +80,18 @@ def extract_actions(counter, replays_path, save_path, batch_size, run_config):
 
                     controller.step()
 
+                    try:
+                        while True:
+                            controller.step(FLAGS.step_mul)
+                            obs = controller.observe()
+
+                            print(obs)
+
+                            exit(0)
+
+                    except KeyboardInterrupt:
+                        pass
+
         
 
 def main(argv):
@@ -104,4 +116,9 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    app.run(main)
+    counter = Value('i', 0)     # Lock so the processes don't work on the same replays
+    run_config = run_configs.get()
+
+    extract_actions(counter, FLAGS.replays_path, FLAGS.save_path, FLAGS.batch_size, run_config)
+
+    #app.run(main)
