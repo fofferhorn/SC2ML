@@ -56,9 +56,10 @@ def extract_actions(counter, replays_path, save_path, batch_size, run_config):
             
             for index in range(batch_start, batch_end):
                 print('================================================================================ Processing replay #' + str(index + 1))
-                sys.stdout.flush()
 
-                replay_data = run_config.replay_data(replay)
+                replay_path = replay_paths[index]
+
+                replay_data = run_config.replay_data(replay_path)
                 info = controller.replay_info(replay_data)
 
                 map_data = None
