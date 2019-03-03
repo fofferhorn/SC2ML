@@ -79,35 +79,32 @@ def filter_replays(counter, replays_path, save_path, batch_size, run_config):
         while True:
             # Check if we have filtered all the replays
             with counter.get_lock():
-                if counter.value * batch_size > len(replay_paths):
+                if counter.value * batch_size >= len(replay_paths):
                     break
                 i = counter.value
                 counter.value += 1
 
-            batch_start = i * batch_size
-            batch_end = i * batch_size + batch_size
+                batch_start = i * batch_size
+                batch_end = i * batch_size + batch_size
 
-            if batch_end > len(replay_paths) - 1:
-                batch_end = len(replay_paths) - 1
-            
-            for index in range(batch_start, batch_end):
-                print('================================================================================ Processing replay #' + str(index + 1))
-                sys.stdout.flush()
-
-                replay_path = replay_paths[index]
-
-                replay_data = run_config.replay_data(replay_path)
+                print('batch_start: ' + str(batch_start) + ' batch_end: ' + str(batch_end))
                 
-                info = controller.replay_info(replay_data)
+                for index in range(batch_start, batch_end):
+                    print('================================================================================ Processing replay #' + str(index + 1))
 
-                if valid_replay(info):
-                    print('================================================================================ Found valid game #' + str(index + 1))
+                    replay_path = replay_paths[index]
 
-                    replay_name = replay_path.split('\\')
+                    replay_data = run_config.replay_data(replay_path)
 
-                    replay_save_path = os.path.join(cwd, save_path, replay_name[-1])
-                    copyfile(replay_path, replay_save_path)
+                    info = controller.replay_info(replay_data)
 
+                    if valid_replay(info):
+                        print('================================================================================ Found valid game #' + str(index + 1))
+
+                        replay_name = replay_path.split('\\')
+
+                        replay_save_path = os.path.join(cwd, save_path, replay_name[-1])
+                        copyfile(replay_path, replay_save_path)
 
 
 def main(argv):
@@ -132,7 +129,7 @@ def main(argv):
     
 
 if __name__ == "__main__":
-    
+    '''
     counter = Value('i', 0)
     run_config = run_configs.get()
 
@@ -141,6 +138,6 @@ if __name__ == "__main__":
             FLAGS.save_path, 
             FLAGS.batch_size,
             run_config)
+    '''
     
-    
-    #app.run(main)
+    app.run(main)
