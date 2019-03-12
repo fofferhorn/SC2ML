@@ -12,7 +12,7 @@ from s2clientprotocol import common_pb2 as sc_common
 FLAGS = flags.FLAGS
 
 # General settings
-flags.DEFINE_string(name = 'replays_path', default = 'replays', help = 'The path to the replays to filter from the current directory.')
+flags.DEFINE_string(name = 'replays_path', default = '4.1.2', help = 'The path to the replays to filter from the current directory.')
 flags.DEFINE_string(name = 'save_path', default = 'filtered_replays', help = 'The path to the folder to save the replays in from the current directory.')
 flags.DEFINE_integer(name = 'n_instance', default = 8, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
@@ -64,6 +64,7 @@ def filter_replays(counter, replays_path, save_path, batch_size, run_config):
         raise ValueError('The path ' + replays_path + ' does not exist.')
 
     # Make list of the paths to all the replays
+    print('Making list of replays...')
     cwd = os.getcwd()
     replay_paths = []
     for replay in os.listdir(replays_path):
@@ -71,39 +72,45 @@ def filter_replays(counter, replays_path, save_path, batch_size, run_config):
         if os.path.isfile(replay_path) and replay.lower().endswith('.sc2replay'):
             replay_paths.append(replay_path)
 
+    print('Checking if save_path exists...')
     # Check if the save_path exists. Otherwise we need to create it
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
-    with run_config.start() as controller:
-        while True:
-            # Check if we have filtered all the replays
-            with counter.get_lock():
-                if counter.value * batch_size >= len(replay_paths):
-                    break
-                i = counter.value
-                counter.value += 1
+    print('Processing replays...')
+    while True:
+        try:
+            with run_config.start() as controller:
+                while True:
+                    # Check if we have filtered all the replays
+                    with counter.get_lock():
+                        if counter.value * batch_size >= len(replay_paths):
+                            return
+                        i = counter.value
+                        counter.value += 1
 
-            batch_start = i * batch_size
-            batch_end = i * batch_size + batch_size
+                    batch_start = i * batch_size
+                    batch_end = i * batch_size + batch_size
 
-            for index in range(batch_start, batch_end):
-                print('================================================================================ Processing replay #' + str(index + 1))
+                    for index in range(batch_start, batch_end):
+                        print('================================================================================ Processing replay #' + str(index + 1))
 
-                replay_path = replay_paths[index]
+                        replay_path = replay_paths[index]
 
-                replay_data = run_config.replay_data(replay_path)
+                        replay_data = run_config.replay_data(replay_path)
 
-                info = controller.replay_info(replay_data)
+                        info = controller.replay_info(replay_data)
 
-                if valid_replay(info):
-                    print('================================================================================ Found valid game #' + str(index + 1))
+                        if valid_replay(info):
+                            print('Found valid game #' + str(index + 1))
 
-                    replay_name = replay_path.split('\\')
+                            replay_name = replay_path.split('/')
 
-                    replay_save_path = os.path.join(cwd, save_path, replay_name[-1])
+                            replay_save_path = os.path.join(cwd, save_path, replay_name[-1])
 
-                    copyfile(replay_path, replay_save_path)
+                            copyfile(replay_path, replay_save_path)
+        except:
+            print('Something went wrong with this replay. Skip this batch and move on to the next one.')
 
 
 def main(argv):
@@ -128,15 +135,15 @@ def main(argv):
     
 
 if __name__ == "__main__":
-    '''
-    counter = Value('i', 0)
-    run_config = run_configs.get()
 
-    filter_replays(counter, 
-            FLAGS.replays_path, 
-            FLAGS.save_path, 
-            FLAGS.batch_size,
-            run_config)
-    '''
+    # counter = Value('i', 0)
+    # run_config = run_configs.get()
+    #
+    # filter_replays(counter,
+    #         FLAGS.replays_path,
+    #         FLAGS.save_path,
+    #         FLAGS.batch_size,
+    #         run_config)
+
     
     app.run(main)
