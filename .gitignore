@@ -10,6 +10,7 @@ __pycache__/
 .SC2replay
 replays/
 filtered_replays/
+extracted_actions/
 
 # Distribution / packaging
 .Pythongit 
