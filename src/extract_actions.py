@@ -75,7 +75,7 @@ protoss_unit_mapper = {
         136: 41,    # WarpPrismPhasing
         894: 42,    # PylonOvercharged
         732: 43     # StasisTrap
-    }
+}
 
 # Mapping of upgrades to indexes in list
 protoss_upgrade_mapper = {
@@ -107,27 +107,15 @@ protoss_upgrade_mapper = {
     141: 25     # DARKTEMPLARBLINKUPGRADE
 }
 
-macro_actions = ["Build", "Cancel", "Morph", "Research", "Stop", "Train", "TrainWarp"]
-# Mapping of macro actions to numbers
-protoss_action_mapper = {
-    BUILD_ASSIMILATOR = 882, // Target: Unit.
-    BUILD_CYBERNETICSCORE = 894, // Target: Point.
-    BUILD_DARKSHRINE = 891, // Target: Point.
-    BUILD_FLEETBEACON = 885, // Target: Point.
-    BUILD_FORGE = 884, // Target: Point.
-    BUILD_GATEWAY = 883, // Target: Point.
-    BUILD_INTERCEPTORS = 1042, // Target: None.
-    BUILD_NEXUS = 880, // Target: Point.
-    BUILD_PHOTONCANNON = 887, // Target: Point.
-    BUILD_PYLON = 881, // Target: Point.
-    BUILD_ROBOTICSBAY = 892, // Target: Point.
-    BUILD_ROBOTICSFACILITY = 893, // Target: Point.
-    BUILD_SHIELDBATTERY = 895, // Target: Point.
-    BUILD_STARGATE = 889, // Target: Point.
-    BUILD_STASISTRAP = 2505, // Target: Point.
-    BUILD_TEMPLARARCHIVE = 890, // Target: Point.
-    BUILD_TWILIGHTCOUNCIL = 886, // Target: Point.
-}
+macro_actions = [
+    "Build", 
+    "Cancel", 
+    "Morph", 
+    "Research", 
+    "Stop", 
+    "Train", 
+    "TrainWarp"
+]
 
 
 def extract_actions(counter, replays_path, save_path, batch_size, run_config):
@@ -167,6 +155,8 @@ def extract_actions(counter, replays_path, save_path, batch_size, run_config):
 
                         replay_path = replay_paths[index]
 
+                        replay_save_path = os.path.join(cwd, save_path, replay_path.split('/')[-1].split('.')[0])
+
                         replay_data = run_config.replay_data(replay_path)
                         info = controller.replay_info(replay_data)
 
@@ -202,33 +192,38 @@ def extract_actions(counter, replays_path, save_path, batch_size, run_config):
 
                                     for action in obs.actions:
                                         if is_macro_action(action, abilities):
-                                            print(action)
-                                            state = make_state_list(obs.observation)
 
+                                            resources = get_resources(obs.observation)
+                                            upgrades = get_upgrades(obs.observation.raw_data.player.upgrade_ids)
                                             friendly_unit_list = get_friendly_unit_list(obs.observation.raw_data.units)
                                             enemy_unit_list = get_enemy_unit_list(obs.observation.raw_data.units)
 
-                                            state += friendly_unit_list + enemy_unit_list
+                                            new_data_point = []
+                                            new_data_point.append(resources)
+                                            new_data_point.append(upgrades)
+                                            new_data_point.append(friendly_unit_list)
+                                            new_data_point.append(enemy_unit_list)
+                                            new_data_point.append(player.player_result.result)
+                                            new_data_point.append(action)
 
-                                            state.append(player.player_result.result)
-                                            state.append(action)
-
-                                            new_data_points.append(state)
+                                            new_data_points.append(new_data_point)
 
                                     data_points = data_points + new_data_points
 
                                     # The game has finished if there is a player_result
                                     if obs.player_result:
-                                        pass
+                                        save_replay_data(data_points, replay_save_path)
 
                             except KeyboardInterrupt:
                                 return
+    except KeyboardInterrupt:
+        return
     except:
         print("Bad replay. Skipping batch.")
 
 
-def make_state_list(observation):
-    state = [
+def get_resources(observation):
+    resources = [
         observation.player_common.minerals,
         observation.player_common.vespene,
         observation.player_common.food_cap,
@@ -240,16 +235,7 @@ def make_state_list(observation):
         observation.player_common.warp_gate_count
     ]
 
-    upgrade_list = [0] * 26
-
-    upgrades = list(observation.raw_data.player.upgrade_ids)
-
-    for upgrade in upgrades:
-        protoss_upgrade = protoss_upgrade_mapper.get(upgrade)
-        if protoss_upgrade is not None:
-            upgrade_list[protoss_upgrade] += 1
-
-    return state + upgrade_list
+    return resources
 
 
 def get_friendly_unit_list(units):
@@ -271,23 +257,36 @@ def get_enemy_unit_list(units):
 
     for unit in units:
         if unit.alliance == 1:
-            protoss_unit = protoss_unit_mapper.get(unit.unit_type)
-            if protoss_unit is not None:
-                unit_list[protoss_unit] += 1
+            unit_index = protoss_unit_mapper.get(unit.unit_type)
+            if unit_index is not None:
+                unit_list[unit_index] += 1
 
     return unit_list
 
 
-def is_macro_action(action, abilities):
-    macro_actions = ["Build", "Cancel", "Morph", "Research", "Stop", "Train", "TrainWarp"]
+def get_upgrades(upgrade_ids):
+    upgrades = [0] * 26
 
+    for upgrade_id in upgrade_ids:
+        protoss_upgrade = protoss_upgrade_mapper.get(upgrade_id)
+        if protoss_upgrade is not None:
+            upgrades[protoss_upgrade] += 1
+    
+    return upgrades
+
+
+def is_macro_action(action, abilities):
     if hasattr(action, "action_raw") and hasattr(action.action_raw, "unit_command"):
         ability_type = abilities[action.action_raw.unit_command.ability_id].friendly_name.split(' ')[0]
         if ability_type in macro_actions:
             return True
     
     return False
-    
+
+
+def save_replay_data(save_path, replay_data):
+    np.save(save_path, replay_data)
+
 
 def main(argv):
     jobs = []                   # The list of processes
