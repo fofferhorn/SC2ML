@@ -26,7 +26,7 @@ FLAGS(sys.argv)
 
 
 def train(model, train_data, train_labels):
-    model.fit(train_data, train_labels)
+    model.fit(train_data, train_labels, epochs=10)
 
     return model
 
@@ -44,7 +44,7 @@ def load_training_data(train_path):
                 train_data.append(data_point[:-1])
                 train_labels.append(data_point[-1])
         
-    return train_data, train_labels
+    return np.array(train_data), np.array(train_labels)
 
 
 def load_validation_data(validation_path):
@@ -56,7 +56,7 @@ def load_validation_data(validation_path):
                 validation_data.append(data_point[:-1])
                 validation_labels.append(data_point[-1])
         
-    return validation_data, validation_labels
+    return np.array(validation_data), np.array(validation_labels)
 
 
 def load_test_data(test_path):
@@ -68,7 +68,7 @@ def load_test_data(test_path):
                 test_data.append(data_point[:-1])
                 test_labels.append(data_point[-1])
         
-    return test_data, test_labels
+    return np.array(test_data), np.array(test_labels)
 
 
 def main(argv):
@@ -79,8 +79,10 @@ def main(argv):
     print('Data loaded.')
 
     input_layer = keras.layers.Input(shape=(194, ), name='input')
-    hidden_layer_1 = keras.layers.Dense(128, activation=tf.nn.relu)
-    output_layer = keras.layers.Dense(54, activation=tf.nn.softmax)(hidden_layer_1)
+    hidden_layer_1 = keras.layers.Dense(1024, activation=tf.nn.relu)(input_layer)
+    hidden_layer_2 = keras.layers.Dense(1024, activation=tf.nn.relu)(hidden_layer_1)
+    hidden_layer_3 = keras.layers.Dense(1024, activation=tf.nn.relu)(hidden_layer_2)
+    output_layer = keras.layers.Dense(54, activation=tf.nn.softmax)(hidden_layer_3)
 
     model = keras.Model(inputs=input_layer, outputs=output_layer)
 
@@ -88,15 +90,16 @@ def main(argv):
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
+    print('=========================================================================')
     print('Training model...')
+    print('=========================================================================')
 
-    print(np.array(train_data).shape)
-    print(len(train_labels))
-
-    while True:
-        model = train(model, train_data, train_labels)
-        validate(model, validation_data, validation_labels)
-
+    try:
+        while True:
+            model = train(model, train_data, train_labels)
+            validate(model, validation_data, validation_labels)
+    except KeyboardInterrupt:
+        return
 
 if __name__ == "__main__":
     app.run(main)
