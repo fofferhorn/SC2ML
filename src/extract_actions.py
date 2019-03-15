@@ -64,7 +64,6 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                     if replays_range_left_in_batch == (0,0):
                         # Everything is good
                         with counter.get_lock():
-                            print('                                                    counter value: ' + str(counter.value))
                             if counter.value * batch_size > len(replay_paths):
                                 print('                                                    Reached the end of the replay list. Returning...')
                                 return
@@ -91,13 +90,14 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                         replay_data = run_config.replay_data(replay_path)
                         info = controller.replay_info(replay_data)
 
-                        data_points = []
 
                         interface = sc_pb.InterfaceOptions()
                         interface.raw = True
                         interface.score = False
 
                         for player in info.player_info:
+                            player_game_data_points = []
+                            
                             start_replay = sc_pb.RequestStartReplay(
                                 replay_data = replay_data,
                                 options = interface,
@@ -108,7 +108,7 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
 
                             controller.step()
 
-                            time_step = 1
+                            time_step = 0
 
                             try:
                                 while True:
@@ -116,10 +116,9 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                                     controller.step(step_mul)
                                     obs = controller.observe()
 
-                                    new_data_points = []
-
                                     for action in obs.actions:
-                                        if is_macro_action(action):
+                                        mapped_action = get_macro_action(action)
+                                        if mapped_action is not None:
                                             resources = get_resources(obs.observation)
                                             upgrades = get_upgrades(obs.observation.raw_data.player.upgrade_ids)
                                             in_progress = get_units_in_progress(obs.observation.raw_data.units)
@@ -127,17 +126,15 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                                             enemy_unit_list = get_enemy_unit_list(obs.observation.raw_data.units)
 
                                             new_data_point = []
-                                            new_data_point.append(time_step)
-                                            new_data_point += resources
-                                            new_data_point += upgrades
-                                            new_data_point += in_progress
-                                            new_data_point += friendly_unit_list
-                                            new_data_point += enemy_unit_list
-                                            new_data_point.append(action.action_raw.unit_command.ability_id)
+                                            new_data_point.append(time_step)        # 1
+                                            new_data_point += resources             # 9
+                                            new_data_point += upgrades              # 26
+                                            new_data_point += in_progress           # 70
+                                            new_data_point += friendly_unit_list    # 44
+                                            new_data_point += enemy_unit_list       # 44
+                                            new_data_point.append(mapped_action)    # 1
 
-                                            new_data_points.append(new_data_point)
-
-                                    data_points = data_points + new_data_points
+                                            player_game_data_points.append(new_data_point)
 
                                     # The game has finished if there is a player_result
                                     if obs.player_result:
@@ -148,7 +145,7 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                             
                             # Save the data for this player.
                             replay_save_path = os.path.join(cwd, save_path, replay_path.split('/')[-1].split('.')[0] + '_' + str(player.player_info.player_id))
-                            save_replay_data(replay_save_path, data_points)
+                            save_replay_data(replay_save_path, player_game_data_points)
                         
                         print('                                                    Finished processing game #' + str(index + 1) + '.')
 
@@ -162,7 +159,8 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
         except pysc2.lib.protocol.ConnectionError:
             print('                                                    Websocket timed out.')
         except:
-            print('                                                    Something want wrong. Skipping this replay.')
+            print('                                                    Something went wrong. Skipping this replay.')
+
 
 def get_resources(observation):
     resources = [
@@ -240,14 +238,14 @@ def get_upgrades(upgrade_ids):
     return upgrades
 
 
-def is_macro_action(action):
-    if (hasattr(action, "action_raw") 
-        and hasattr(action.action_raw, "unit_command")
-        and c.protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id) is not None
-        ):
-            return True
+def get_macro_action(action):
+    if hasattr(action, "action_raw") and hasattr(action.action_raw, "unit_command"):
+        mapped_action = c.protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id)
+
+        if mapped_action is not None:
+            return mapped_action
     
-    return False
+    return None
 
 
 def save_replay_data(save_path, replay_data):
@@ -280,7 +278,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    # counter = Value('i', 0)     # Lock so the processes don't work on the same replays
+    # counter = Value('i', int(FLAGS.start_from_replay/FLAGS.batch_size))     # Lock so the processes don't work on the same replays
     # extract_actions(counter, FLAGS.replays_path, FLAGS.save_path, FLAGS.batch_size, FLAGS.step_mul)
 
     app.run(main)

@@ -187,6 +187,8 @@ protoss_action_to_unit_mapper = {
     # 4,     # STOP_STOP
 }
 
+
+
 macro_actions = [
     "Build", 
     "Cancel", 
@@ -278,4 +280,68 @@ protoss_macro_actions = [
     'TRAIN_VOIDRAY',
     'TRAIN_WARPPRISM',
     'TRAIN_ZEALOT'
+]
+
+output_to_action = [
+    # Build
+    0,  # ASSIMILATOR
+    1,  # CYBERNETICSCORE
+    2,  # DARKSHRINE
+    3,  # FLEETBEACON
+    4,  # FORGE
+    5,  # GATEWAY
+    6,  # INTERCEPTORS
+    7,  # NEXUS
+    8,  # PHOTONCANNON
+    9,  # PYLON
+    10, # ROBOTICSBAY
+    11, # ROBOTICSFACILITY
+    12, # SHIELDBATTERY
+    13, # STARGATE
+    14, # TEMPLARARCHIVE
+    15, # TWILIGHTCOUNCIL
+
+    # Morph
+    16, # ARCHON
+    17, # MOTHERSHIP
+    18, # WARPGATE
+
+    # Research
+    19, # ADEPTRESONATINGGLAIVES
+    20, # BLINK
+    21, # CHARGE
+    22, # EXTENDEDTHERMALLANCE
+    23, # GRAVITICBOOSTER
+    24, # GRAVITICDRIVE
+    25, # INTERCEPTORGRAVITONCATAPULT
+    26, # PHOENIXANIONPULSECRYSTALS
+    27, # PROTOSSAIRARMOR
+    28, # PROTOSSAIRWEAPONS
+    29, # PROTOSSGROUNDARMOR
+    30, # PROTOSSGROUNDWEAPONS
+    31, # PROTOSSSHIELDS
+    32, # PSISTORM
+    33, # SHADOWSTRIKE
+    34, # WARPGATE
+
+    # Train
+    35, # ADEPT
+    36, # CARRIER
+    37, # COLOSSUS
+    38, # DARKTEMPLAR
+    39, # DISRUPTOR
+    40, # HIGHTEMPLAR
+    41, # IMMORTAL
+    42, # MOTHERSHIP
+    43, # MOTHERSHIPCORE
+    44, # OBSERVER
+    45, # ORACLE
+    46, # PHOENIX
+    47, # PROBE
+    48, # SENTRY
+    49, # STALKER
+    50, # TEMPEST
+    51, # VOIDRAY
+    52, # WARPPRISM
+    53  # ZEALOT
 ]
