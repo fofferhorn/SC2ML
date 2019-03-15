@@ -4,21 +4,26 @@ from multiprocessing import Process, Value
 from absl import app
 from absl import flags
 import sys
+import time
 
 import numpy as np
 from scipy import sparse
 
+import pysc2
 from pysc2 import run_configs
 from s2clientprotocol import sc2api_pb2 as sc_pb
+
+from websocket import WebSocketTimeoutException
 
 FLAGS = flags.FLAGS
 
 # General settings
 flags.DEFINE_string(name = 'replays_path', default = 'filtered_replays', help = 'The path to the replays to extract actions from the current directory.')
 flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'The path to the folder to save the replays in from the current directory.')
-flags.DEFINE_integer(name = 'n_instance', default = 8, help = 'The default amount of threads to use to filter the replays.')
+flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 750, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)
@@ -124,7 +129,6 @@ protoss_action_to_unit_mapper = {
     893: 34,   # BUILD_ROBOTICSFACILITY
     895: 32,   # BUILD_SHIELDBATTERY
     889: 35,   # BUILD_STARGATE
-    2505: 43,  # BUILD_STASISTRAP
     890: 28,   # BUILD_TEMPLARARCHIVE
     886: 27,   # BUILD_TWILIGHTCOUNCIL
 
@@ -225,7 +229,7 @@ macro_actions = [
 ]
 
 
-def extract_actions(counter, replays_path, save_path, batch_size, step_mul, run_config):
+def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
     # Check if the replays_path exists
     if not os.path.isdir(replays_path):
         raise ValueError('The path ' + replays_path + ' does not exist.')
@@ -241,24 +245,44 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul, run_
     # Check if the save_path exists. Otherwise we need to create it
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
-    try:
-        while True:
+
+    # Used for picking up from where an exception was thrown.
+    replays_range_left_in_batch = (0,0)
+
+    while True:
+        try:
+            run_config = run_configs.get()
             with run_config.start() as controller:
                 while True:
-                    with counter.get_lock():
-                        if counter.value * batch_size > len(replays_path):
-                            return
-                        i = counter.value
-                        counter.value += 1
+                    # Variables for later
+                    batch_start = 0
+                    batch_end = 0
 
-                    batch_start = i * batch_size
-                    batch_end = i * batch_size + batch_size
+                    # Check if we resumed here from an exception
+                    if replays_range_left_in_batch == (0,0):
+                        # Everything is good
+                        with counter.get_lock():
+                            print('                                                    counter value: ' + str(counter.value))
+                            if counter.value * batch_size > len(replay_paths):
+                                print('                                                    Reached the end of the replay list. Returning...')
+                                return
+                            batch_number = counter.value
+                            counter.value += 1
 
-                    if batch_end > len(replay_paths) - 1:
-                        batch_end = len(replay_paths) - 1
+                        batch_start = batch_number * batch_size
+                        batch_end = batch_number * batch_size + batch_size
+                        if batch_end > len(replay_paths) - 1:
+                            batch_end = len(replay_paths) - 1
+                    else:
+                        # We resumed here from an exception. Skip the replay that caused an exception.
+                        batch_start = replays_range_left_in_batch[0] + 1
+                        batch_end = replays_range_left_in_batch[1]
+                        print('                                                    Resuming with batch from a crash. Resuming from ' + str(batch_start) + ' to ' + str(batch_end))
 
                     for index in range(batch_start, batch_end):
                         print('================================================================================ Processing replay #' + str(index + 1))
+
+                        replays_range_left_in_batch = (index, batch_end)
 
                         replay_path = replay_paths[index]
 
@@ -284,37 +308,32 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul, run_
 
                             controller.step()
 
-                            # All actions a player can take
-                            abilities = controller.data_raw().abilities
-
-                            steps = 1
+                            time_step = 1
 
                             try:
                                 while True:
-                                    steps += step_mul
+                                    time_step += step_mul
                                     controller.step(step_mul)
                                     obs = controller.observe()
 
                                     new_data_points = []
 
                                     for action in obs.actions:
-                                        if is_macro_action(action, abilities):
-
+                                        if is_macro_action(action):
                                             resources = get_resources(obs.observation)
                                             upgrades = get_upgrades(obs.observation.raw_data.player.upgrade_ids)
                                             in_progress = get_units_in_progress(obs.observation.raw_data.units)
-
                                             friendly_unit_list = get_friendly_unit_list(obs.observation.raw_data.units)
                                             enemy_unit_list = get_enemy_unit_list(obs.observation.raw_data.units)
 
                                             new_data_point = []
-                                            new_data_point.append(resources)
-                                            new_data_point.append(upgrades)
-                                            new_data_point.append(in_progress)
-                                            new_data_point.append(friendly_unit_list)
-                                            new_data_point.append(enemy_unit_list)
-                                            new_data_point.append(player.player_result.result)
-                                            new_data_point.append(action)
+                                            new_data_point.append(time_step)
+                                            new_data_point += resources
+                                            new_data_point += upgrades
+                                            new_data_point += in_progress
+                                            new_data_point += friendly_unit_list
+                                            new_data_point += enemy_unit_list
+                                            new_data_point.append(action.action_raw.unit_command.ability_id)
 
                                             new_data_points.append(new_data_point)
 
@@ -322,19 +341,25 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul, run_
 
                                     # The game has finished if there is a player_result
                                     if obs.player_result:
-                                        print('Game has finished. Saving data...')
+                                        print('                                                    Replay #' + str(index+1) + ' from player ' + str(player.player_info.player_id) + '\'s perspective has finished.')
                                         break
-
                             except KeyboardInterrupt:
                                 return
                         
+                        print('                                                    Finished processing game #' + str(index + 1) + '. Saving data...')
                         save_replay_data(replay_save_path, data_points)
 
-    except KeyboardInterrupt:
-        return
-    except:
-        print("Bad replay. Skipping batch.")
+                    # Everything went smothely with this replay batch. Reset the counter and move on.
+                    replays_range_left_in_batch = (0,0)
 
+        except KeyboardInterrupt:
+            return
+        except WebSocketTimeoutException:
+            print('                                                    Websocket timed out.')
+        except pysc2.lib.protocol.ConnectionError:
+            print('                                                    Websocket timed out.')
+        except:
+            print('                                                    Something want wrong. Skipping this replay.')
 
 def get_resources(observation):
     resources = [
@@ -412,10 +437,11 @@ def get_upgrades(upgrade_ids):
     return upgrades
 
 
-def is_macro_action(action, abilities):
-    if hasattr(action, "action_raw") and hasattr(action.action_raw, "unit_command"):
-        ability_type = abilities[action.action_raw.unit_command.ability_id].friendly_name.split(' ')[0]
-        if ability_type in macro_actions:
+def is_macro_action(action):
+    if (hasattr(action, "action_raw") 
+        and hasattr(action.action_raw, "unit_command")
+        and protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id) is not None
+        ):
             return True
     
     return False
@@ -427,8 +453,7 @@ def save_replay_data(save_path, replay_data):
 
 def main(argv):
     jobs = []                   # The list of processes
-    counter = Value('i', 0)     # Lock so the processes don't work on the same replays
-    run_config = run_configs.get()
+    counter = Value('i', FLAGS.start_from_replay)     # Lock so the processes don't work on the same replays
 
     for _ in range(FLAGS.n_instance):
         p = Process(target = extract_actions, args = [
@@ -436,11 +461,12 @@ def main(argv):
             FLAGS.replays_path, 
             FLAGS.save_path, 
             FLAGS.batch_size,
-            FLAGS.step_mul,
-            run_config])
+            FLAGS.step_mul])
         jobs.append(p)
         p.daemon = True
         p.start()
+
+        time.sleep(1)
 
     # Wait for each process to finish.
     for i in range(FLAGS.n_instance):
@@ -448,9 +474,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    counter = Value('i', 0)     # Lock so the processes don't work on the same replays
-    run_config = run_configs.get()
+    # counter = Value('i', 0)     # Lock so the processes don't work on the same replays
+    # extract_actions(counter, FLAGS.replays_path, FLAGS.save_path, FLAGS.batch_size, FLAGS.step_mul)
 
-    extract_actions(counter, FLAGS.replays_path, FLAGS.save_path, FLAGS.batch_size, FLAGS.step_mul, run_config)
-
-    #app.run(main)
+    app.run(main)
