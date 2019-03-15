@@ -15,6 +15,8 @@ from s2clientprotocol import sc2api_pb2 as sc_pb
 
 from websocket import WebSocketTimeoutException
 
+import constants as c
+
 FLAGS = flags.FLAGS
 
 # General settings
@@ -23,210 +25,10 @@ flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'T
 flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
-flags.DEFINE_integer(name = 'start_from_replay', default = 750, help = 'The replay number to start from.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 0, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)
-
-
-# Mapping of unit_id to index in list.
-protoss_unit_mapper = {
-    # Units
-    84: 0,      # Probe
-    73: 1,      # Zealot
-    77: 2,      # Sentry
-    311: 3,     # Adept
-    74: 4,      # Stalker
-    75: 5,      # HighTemplar
-    76: 6,      # DarkTemplar
-    141: 7,     # Archon
-    4: 8,       # Colossus
-    694: 9,     # Disruptor
-    82: 10,     # Observer
-    83: 11,     # Immortal
-    81: 12,     # WarpPrism
-    78: 13,     # Phoenix
-    495: 14,    # Oracle
-    80: 15,     # VoidRay
-    496: 16,    # Tempest
-    79: 17,     # Carrier
-    85: 18,     # Interceptor
-    10: 19,     # Mothership
-    488: 20,    # MothershipCore
-
-    # Buildings
-    59: 21,     # Nexus
-    60: 22,     # Pylon
-    61: 23,     # Assimilator
-    62: 24,     # Gateway
-    133: 25,    # WarpGate
-    72: 26,     # CyberneticsCore
-    65: 27,     # TwilightCouncil
-    68: 28,     # TemplarArchive
-    69: 29,     # DarkShrine
-    63: 30,     # Forge
-    66: 31,     # PhotonCannon
-    1910: 32,   # ShieldBattery
-    70: 33,     # RoboticsBay
-    71: 34,     # RoboticsFacility
-    67: 35,     # Stargate
-    64: 36,     # FleetBeacon
-
-    # Abilities
-    801: 37,    # AdeptPhaseShift
-    135: 38,    # ForceField
-    1911: 39,   # ObserverSurveillanceMode
-    733: 40,    # DisruptorPhased
-    136: 41,    # WarpPrismPhasing
-    894: 42,    # PylonOvercharged
-    732: 43     # StasisTrap
-}
-
-# Mapping of upgrades to indexes in list
-protoss_upgrade_mapper = {
-    1: 0,       # CARRIERLAUNCHSPEEDUPGRADE
-    39: 1,      # PROTOSSGROUNDWEAPONSLEVEL1
-    40: 2,      # PROTOSSGROUNDWEAPONSLEVEL2
-    41: 3,      # PROTOSSGROUNDWEAPONSLEVEL3
-    42: 4,      # PROTOSSGROUNDARMORSLEVEL1
-    43: 5,      # PROTOSSGROUNDARMORSLEVEL2
-    44: 6,      # PROTOSSGROUNDARMORSLEVEL3
-    45: 7,      # PROTOSSSHIELDSLEVEL1
-    46: 8,      # PROTOSSSHIELDSLEVEL2
-    47: 9,      # PROTOSSSHIELDSLEVEL3
-    48: 10,     # OBSERVERGRAVITICBOOSTER
-    49: 11,     # GRAVITICDRIVE
-    50: 12,     # EXTENDEDTHERMALLANCE
-    52: 13,     # PSISTORMTECH
-    78: 14,     # PROTOSSAIRWEAPONSLEVEL1
-    79: 15,     # PROTOSSAIRWEAPONSLEVEL2
-    80: 16,     # PROTOSSAIRWEAPONSLEVEL3
-    81: 17,     # PROTOSSAIRARMORSLEVEL1
-    82: 18,     # PROTOSSAIRARMORSLEVEL2
-    83: 19,     # PROTOSSAIRARMORSLEVEL3
-    84: 20,     # WARPGATERESEARCH
-    86: 21,     # CHARGE
-    87: 22,     # BLINKTECH
-    99: 23,     # PHOENIXRANGEUPGRADE
-    130: 24,    # ADEPTPIERCINGATTACK
-    141: 25     # DARKTEMPLARBLINKUPGRADE
-}
-
-# Mapping of macro actions to the buildings/units/upgrades they will turn into. 
-protoss_action_to_unit_mapper = {
-    # Build
-    882: 23,    # BUILD_ASSIMILATOR
-    894: 26,    # BUILD_CYBERNETICSCORE
-    891: 29,    # BUILD_DARKSHRINE
-    885: 36,    # BUILD_FLEETBEACON
-    884: 30,    # BUILD_FORGE
-    883: 24,    # BUILD_GATEWAY
-    1042: 18,   # BUILD_INTERCEPTORS
-    880: 21,    # BUILD_NEXUS
-    887: 31,    # BUILD_PHOTONCANNON
-    881: 22,    # BUILD_PYLON
-    892: 33,   # BUILD_ROBOTICSBAY
-    893: 34,   # BUILD_ROBOTICSFACILITY
-    895: 32,   # BUILD_SHIELDBATTERY
-    889: 35,   # BUILD_STARGATE
-    890: 28,   # BUILD_TEMPLARARCHIVE
-    886: 27,   # BUILD_TWILIGHTCOUNCIL
-
-    # Morph
-    1766: 7,  # MORPH_ARCHON
-    1520: 24,  # MORPH_GATEWAY
-    1847: 19,  # MORPH_MOTHERSHIP
-    1518: 25,  # MORPH_WARPGATE
-
-    # Research
-    1594: 24,  # RESEARCH_ADEPTRESONATINGGLAIVES
-    1593: 22,  # RESEARCH_BLINK
-    1592: 21,  # RESEARCH_CHARGE
-    1097: 12,  # RESEARCH_EXTENDEDTHERMALLANCE
-    1093: 10,  # RESEARCH_GRAVITICBOOSTER
-    1094: 11,  # RESEARCH_GRAVITICDRIVE
-    44: 0,    # RESEARCH_INTERCEPTORGRAVITONCATAPULT
-    46: 23,    # RESEARCH_PHOENIXANIONPULSECRYSTALS
-    1565: 17,  # RESEARCH_PROTOSSAIRARMORLEVEL1
-    1566: 18,  # RESEARCH_PROTOSSAIRARMORLEVEL2
-    1567: 19,  # RESEARCH_PROTOSSAIRARMORLEVEL3
-    1562: 14,  # RESEARCH_PROTOSSAIRWEAPONSLEVEL1
-    1563: 15,  # RESEARCH_PROTOSSAIRWEAPONSLEVEL2
-    1564: 16,  # RESEARCH_PROTOSSAIRWEAPONSLEVEL3
-    1065: 4,  # RESEARCH_PROTOSSGROUNDARMORLEVEL1
-    1066: 5,  # RESEARCH_PROTOSSGROUNDARMORLEVEL2
-    1067: 6,  # RESEARCH_PROTOSSGROUNDARMORLEVEL3
-    1062: 1,  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL1
-    1063: 2,  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL2
-    1064: 3,  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL3
-    1068: 7,  # RESEARCH_PROTOSSSHIELDSLEVEL1
-    1069: 8,  # RESEARCH_PROTOSSSHIELDSLEVEL2
-    1070: 9,  # RESEARCH_PROTOSSSHIELDSLEVEL3
-    1126: 13,  # RESEARCH_PSISTORM
-    2720: 25,  # RESEARCH_SHADOWSTRIKE
-    1568: 20,  # RESEARCH_WARPGATE
-
-    # Train
-    922: 3,   # TRAIN_ADEPT
-    948: 17,   # TRAIN_CARRIER
-    978: 8,   # TRAIN_COLOSSUS
-    920: 6,   # TRAIN_DARKTEMPLAR
-    994: 9,   # TRAIN_DISRUPTOR
-    919: 5,   # TRAIN_HIGHTEMPLAR
-    979: 11,   # TRAIN_IMMORTAL
-    110: 19,   # TRAIN_MOTHERSHIP
-    1853: 20,  # TRAIN_MOTHERSHIPCORE
-    977: 10,   # TRAIN_OBSERVER
-    954: 14,   # TRAIN_ORACLE
-    946: 13,   # TRAIN_PHOENIX
-    1006: 0,  # TRAIN_PROBE
-    921: 2,   # TRAIN_SENTRY
-    917: 4,   # TRAIN_STALKER
-    955: 16,   # TRAIN_TEMPEST
-    950: 15,   # TRAIN_VOIDRAY
-    976: 12,   # TRAIN_WARPPRISM
-    916: 1,   # TRAIN_ZEALOT
-
-    # TrainWarp
-    1419: 3,  # TRAINWARP_ADEPT
-    1417: 6,  # TRAINWARP_DARKTEMPLAR
-    1416: 5,  # TRAINWARP_HIGHTEMPLAR
-    1418: 2,  # TRAINWARP_SENTRY
-    1414: 4,  # TRAINWARP_STALKER
-    1413: 1,  # TRAINWARP_ZEALOT
-
-    # # Cancel
-    # 3659,  # CANCEL
-    # 313,   # CANCELSLOT_ADDON
-    # 305,   # CANCELSLOT_QUEUE1
-    # 307,   # CANCELSLOT_QUEUE5
-    # 309,   # CANCELSLOT_QUEUECANCELTOSELECTION
-    # 1832,  # CANCELSLOT_QUEUEPASSIVE
-    # 314,   # CANCEL_BUILDINPROGRESS
-    # 3671,  # CANCEL_LAST
-    # 1848,  # CANCEL_MORPHMOTHERSHIP
-    # 304,   # CANCEL_QUEUE1
-    # 306,   # CANCEL_QUEUE5
-    # 312,   # CANCEL_QUEUEADDON
-    # 308,   # CANCEL_QUEUECANCELTOSELECTION
-    # 1831,  # CANCEL_QUEUEPASIVE
-    # 1833,  # CANCEL_QUEUEPASSIVECANCELTOSELECTION
-
-    # # Stop
-    # 3665,  # STOP
-    # 2057,  # STOP_BUILDING
-    # 4,     # STOP_STOP
-}
-
-macro_actions = [
-    "Build", 
-    "Cancel", 
-    "Morph", 
-    "Research", 
-    "Stop", 
-    "Train", 
-    "TrainWarp"
-]
 
 
 def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
@@ -286,8 +88,6 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
 
                         replay_path = replay_paths[index]
 
-                        replay_save_path = os.path.join(cwd, save_path, replay_path.split('/')[-1].split('.')[0])
-
                         replay_data = run_config.replay_data(replay_path)
                         info = controller.replay_info(replay_data)
 
@@ -345,9 +145,12 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                                         break
                             except KeyboardInterrupt:
                                 return
+                            
+                            # Save the data for this player.
+                            replay_save_path = os.path.join(cwd, save_path, replay_path.split('/')[-1].split('.')[0] + '_' + str(player.player_info.player_id))
+                            save_replay_data(replay_save_path, data_points)
                         
-                        print('                                                    Finished processing game #' + str(index + 1) + '. Saving data...')
-                        save_replay_data(replay_save_path, data_points)
+                        print('                                                    Finished processing game #' + str(index + 1) + '.')
 
                     # Everything went smothely with this replay batch. Reset the counter and move on.
                     replays_range_left_in_batch = (0,0)
@@ -385,14 +188,14 @@ def get_units_in_progress(units):
         if unit.alliance == 1:
             # Something is being built/something in the map. E.g. a building being built.
             if unit.build_progress < 1:
-                protoss_unit = protoss_unit_mapper.get(unit.unit_type)
+                protoss_unit = c.protoss_unit_mapper.get(unit.unit_type)
                 in_progress_list[protoss_unit] += 1
 
             # Something is being built/something by something else. E.g. a building training a unit.
             if unit.orders is not None:
                 for order in unit.orders:
                     # The unit being built by e.g. a building.
-                    in_progress_entity = protoss_action_to_unit_mapper.get(order.ability_id) 
+                    in_progress_entity = c.protoss_action_to_unit_mapper.get(order.ability_id) 
         
                     if in_progress_entity is not None:
                         in_progress_list[in_progress_entity] += 1
@@ -406,7 +209,7 @@ def get_friendly_unit_list(units):
 
     for unit in units:
         if unit.alliance == 1:
-            protoss_unit = protoss_unit_mapper.get(unit.unit_type)
+            protoss_unit = c.protoss_unit_mapper.get(unit.unit_type)
             if protoss_unit is not None:
                 unit_list[protoss_unit] += 1
 
@@ -419,7 +222,7 @@ def get_enemy_unit_list(units):
 
     for unit in units:
         if unit.alliance == 4:
-            unit_index = protoss_unit_mapper.get(unit.unit_type)
+            unit_index = c.protoss_unit_mapper.get(unit.unit_type)
             if unit_index is not None:
                 unit_list[unit_index] += 1
 
@@ -430,7 +233,7 @@ def get_upgrades(upgrade_ids):
     upgrades = [0] * 26
 
     for upgrade_id in upgrade_ids:
-        protoss_upgrade = protoss_upgrade_mapper.get(upgrade_id)
+        protoss_upgrade = c.protoss_upgrade_mapper.get(upgrade_id)
         if protoss_upgrade is not None:
             upgrades[protoss_upgrade] += 1
     
@@ -440,7 +243,7 @@ def get_upgrades(upgrade_ids):
 def is_macro_action(action):
     if (hasattr(action, "action_raw") 
         and hasattr(action.action_raw, "unit_command")
-        and protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id) is not None
+        and c.protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id) is not None
         ):
             return True
     
@@ -452,8 +255,11 @@ def save_replay_data(save_path, replay_data):
 
 
 def main(argv):
-    jobs = []                   # The list of processes
-    counter = Value('i', FLAGS.start_from_replay)     # Lock so the processes don't work on the same replays
+    # The list of processes
+    jobs = []              
+
+    # Lock so the processes don't work on the same replays
+    counter = Value('i', int(FLAGS.start_from_replay/FLAGS.batch_size))     
 
     for _ in range(FLAGS.n_instance):
         p = Process(target = extract_actions, args = [
