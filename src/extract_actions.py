@@ -25,7 +25,7 @@ flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'T
 flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
-flags.DEFINE_integer(name = 'start_from_replay', default = 0, help = 'The replay number to start from.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 670, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)
@@ -132,7 +132,7 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                                             new_data_point += in_progress           # 70
                                             new_data_point += friendly_unit_list    # 44
                                             new_data_point += enemy_unit_list       # 44
-                                            new_data_point.append(mapped_action)    # 1
+                                            new_data_point += mapped_action    # 54
 
                                             player_game_data_points.append(new_data_point)
 
@@ -239,11 +239,13 @@ def get_upgrades(upgrade_ids):
 
 
 def get_macro_action(action):
+    actions = [0] * 54
     if hasattr(action, "action_raw") and hasattr(action.action_raw, "unit_command"):
         mapped_action = c.protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id)
 
         if mapped_action is not None:
-            return mapped_action
+            actions[mapped_action] += 1
+            return actions
     
     return None
 
