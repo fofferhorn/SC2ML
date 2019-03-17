@@ -25,7 +25,7 @@ flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'T
 flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
-flags.DEFINE_integer(name = 'start_from_replay', default = 990, help = 'The replay number to start from.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 2230, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)

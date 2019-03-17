@@ -1,0 +1,35 @@
+_____________________________________________________________________________________
+Data meta data
+# of games              3447
+# of data points      389918
+-------------------------------------------------------------------------------------
+| Data                      | # data points             | # data point dimensions   |
+-------------------------------------------------------------------------------------
+| train_data shape          |                    272942 |                       194 |
+| train_labels shape        |                    272942 |                        54 |
+| validation_data shape     |                     77984 |                       194 |
+| validation_labels shape   |                     77984 |                        54 |
+| test_data shape           |                     38992 |                       194 |
+| test_labels shape         |                     38992 |                        54 |
+_____________________________________________________________________________________
+
+Setup:
+input: 194
+hidden 1: 1024, relu
+dropout: 0,2
+hidden 2: 1024, relu
+dropout: 0,2
+output: 54, softmax
+
+loss function: categorical_crossentropy
+optimizer: adam
+metrics: top-1 categorical accuracy, top-3 categorical accuracy
+
+split: 70:20:10
+
+Epochs: 200
+
+Results:
+loss: 
+top_1_categorical_accuracy: 
+top_3_categorical_accuracy: 

@@ -26,7 +26,7 @@ flags.DEFINE_string(name = 'model_name', default = 'model', help = 'The name to 
 flags.DEFINE_boolean(name = 'resume_from_model', default = False, help = 'Continue training a model.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
 flags.DEFINE_integer(name = 'batch_size', default = 32, help = 'The batch size to use for training.')
-flags.DEFINE_integer(name = 'max_epochs', default = 1000, help = 'The maximum amount of epochs.')
+flags.DEFINE_integer(name = 'max_epochs', default = 200, help = 'The maximum amount of epochs.')
 
 FLAGS(sys.argv)
 
@@ -57,6 +57,7 @@ def load_data(data_path, train, validation, test, seed = None):
         _data_path = os.path.join(data_base_path, data)
         if os.path.isfile(_data_path) and data.lower().endswith('.npy'):
             data_paths.append(_data_path)
+
 
     data_and_labels = []
     for path in data_paths:
@@ -97,6 +98,21 @@ def load_data(data_path, train, validation, test, seed = None):
             test_data.append(data[index])
             test_labels.append(labels[index])
 
+    print('_____________________________________________________________________________________')
+    print('Data meta data')
+    print('{:20s} {:7d}'.format('# of games', len(data_paths)))
+    print('{:20s} {:7d}'.format('# of data points', len(data_and_labels)))
+    print('-------------------------------------------------------------------------------------')
+    print('| {:25s} | {:25s} | {:25s} |'.format('Data', '# data points', '# data point dimensions'))
+    print('-------------------------------------------------------------------------------------')
+    print('| {:25s} | {:25d} | {:25d} |'.format('train_data shape', len(train_data), len(train_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('train_labels shape', len(train_labels), len(train_labels[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('validation_data shape', len(validation_data), len(validation_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('validation_labels shape', len(validation_labels), len(validation_labels[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('test_data shape', len(test_data), len(test_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('test_labels shape', len(test_labels), len(test_labels[0])))
+    print('_____________________________________________________________________________________')
+
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 
@@ -119,8 +135,10 @@ def main(argv):
         num_classes = train_labels.shape[1]
 
         model = keras.models.Sequential()
-        model.add(keras.layers.Dense(1024, activation=tf.nn.relu, input_shape=(input_size,)))
-        model.add(keras.layers.Dense(1024, activation=tf.nn.relu))
+        model.add(layers.Dense(1024, activation=tf.nn.relu, input_shape=(input_size,)))
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Dense(1024, activation=tf.nn.relu))
+        model.add(layers.Dropout(0.2))
         model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
 
         model.summary()
@@ -132,8 +150,6 @@ def main(argv):
         print('=========================================================================')
         print('Training model...')
         print('=========================================================================')
-
-        batch = 0
 
         try:
             model, history = train(
@@ -161,7 +177,7 @@ def main(argv):
             print('Model scores:')
 
             for index in range(len(model.metrics_names)):
-                print("%s: %.2f%%" % (model.metrics_names[index], scores[index]*100))
+                print('%s: %.2f%%' % (model.metrics_names[index], scores[index]*100))
 
             print()
 
@@ -196,9 +212,9 @@ def main(argv):
         except KeyboardInterrupt:
             model.save(FLAGS.model_name + '_interrupted.h5')
             return
-        # except KeyboardInterrupt:
-        #     model.save(FLAGS.model_name + '_error.h5')
-        #     return
+        except KeyboardInterrupt:
+            model.save(FLAGS.model_name + '_error.h5')
+            return
 
     else:
         model = keras.models.load_model(FLAGS.model_name)
@@ -207,44 +223,3 @@ def main(argv):
 
 if __name__ == "__main__":
     app.run(main)
-
-
-
-
-
-
-
-# def load_training_data(train_path):
-#     train_data = []
-#     train_labels = []
-#     for _file in os.listdir(train_path):
-#         if _file.endswith('.npy'):
-#             for data_point in np.load(os.path.join(train_path, _file)):
-#                 train_data.append(data_point[:-1])
-#                 train_labels.append(data_point[-1])
-        
-#     return np.array(train_data), np.array(train_labels)
-
-
-# def load_validation_data(validation_path):
-#     validation_data = []
-#     validation_labels = []
-#     for _file in os.listdir(validation_path):
-#         if _file.endswith('.npy'):
-#             for data_point in np.load(os.path.join(validation_path, _file)):
-#                 validation_data.append(data_point[:-1])
-#                 validation_labels.append(data_point[-1])
-        
-#     return np.array(validation_data), np.array(validation_labels)
-
-
-# def load_test_data(test_path):
-#     test_data = []
-#     test_labels = []
-#     for _file in os.listdir(test_path):
-#         if _file.endswith('.npy'):
-#             for data_point in np.load(os.path.join(test_path, _file)):
-#                 test_data.append(data_point[:-1])
-#                 test_labels.append(data_point[-1])
-        
-#     return np.array(test_data), np.array(test_labels)
