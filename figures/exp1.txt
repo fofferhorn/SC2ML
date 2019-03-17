@@ -1,0 +1,16 @@
+Setup:
+input: 194
+hidden 1: 1024, relu
+hidden 2: 1024, relu
+output: 54, softmax
+
+loss function: categorical_crossentropy
+optimizer: adam
+metrics: top-1 categorical accuracy, top-3 categorical accuracy
+
+split: 70:20:10
+
+Results:
+loss: 81.76%
+top_1_categorical_accuracy: 81.46%
+top_3_categorical_accuracy: 97.45%

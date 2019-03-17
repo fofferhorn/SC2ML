@@ -3,6 +3,9 @@ from __future__ import absolute_import, division, print_function
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras import metrics, optimizers, layers, losses, models
+from tensorflow.keras import backend as K
+
 
 # Helper libraries
 import numpy as np
@@ -23,20 +26,22 @@ flags.DEFINE_string(name = 'model_name', default = 'model', help = 'The name to 
 flags.DEFINE_boolean(name = 'resume_from_model', default = False, help = 'Continue training a model.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
 flags.DEFINE_integer(name = 'batch_size', default = 32, help = 'The batch size to use for training.')
+flags.DEFINE_integer(name = 'max_epochs', default = 1000, help = 'The maximum amount of epochs.')
 
 FLAGS(sys.argv)
 
 
-def train(model, train_data, train_labels, validation_data, validation_labels, batch_size):
-    model.fit(
+def train(model, train_data, train_labels, validation_data, validation_labels, batch_size, max_epochs):
+    history = model.fit(
         train_data, 
         train_labels, 
         validation_data=(validation_data, validation_labels),
-        epochs=1000,
-        batch_size=batch_size
+        epochs=max_epochs,
+        batch_size=batch_size,
+        verbose = 1
     )
 
-    return model
+    return model, history
 
 
 def validate(model, validation_data, validation_labels):
@@ -95,31 +100,34 @@ def load_data(data_path, train, validation, test, seed = None):
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 
+def top_3_categorical_accuracy(y_true, y_pred):
+    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
+
+
+def top_1_categorical_accuracy(y_true, y_pred):
+    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=1)
+
+
 def main(argv):
     print('Loading data...')
     train_data, train_labels, validation_data, validation_labels, test_data, test_labels = load_data(FLAGS.data_path, 0.7, 0.2, 0.1, FLAGS.seed)
     print('Data loaded.')
 
-    print('train_data: ' + str(train_data.shape))
-    print('train_labels: ' + str(train_labels.shape))
-    print('validation_data: ' + str(validation_data.shape))
-    print('validation_labels: ' + str(validation_labels.shape))
-    print('test_data: ' + str(test_data.shape))
-    print('test_labels: ' + str(test_labels.shape))
-    
     if not FLAGS.resume_from_model:
-        model = keras.models.Sequential()
-        model.add(keras.layers.Dense(1024, activation=tf.nn.relu, input_shape=(train_data.shape[1],)))
-        model.add(keras.layers.Dense(train_labels.shape[1], activation=tf.nn.softmax))
 
-        print('model input: ' + str(model.layers[0].input.shape))
-        print('model output: ' + str(model.layers[-1].output.shape))
+        input_size = train_data.shape[1]
+        num_classes = train_labels.shape[1]
+
+        model = keras.models.Sequential()
+        model.add(keras.layers.Dense(1024, activation=tf.nn.relu, input_shape=(input_size,)))
+        model.add(keras.layers.Dense(1024, activation=tf.nn.relu))
+        model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
 
         model.summary()
 
-        model.compile(optimizer='adam', 
-                loss='sparse_categorical_crossentropy',
-                metrics=['accuracy'])
+        model.compile(loss=losses.categorical_crossentropy,
+                    optimizer=optimizers.Adam(),
+                    metrics=[top_1_categorical_accuracy, top_3_categorical_accuracy])
         
         print('=========================================================================')
         print('Training model...')
@@ -128,19 +136,63 @@ def main(argv):
         batch = 0
 
         try:
-            while True:
-                model = train(
-                    model, 
-                    train_data, 
-                    train_labels, 
-                    validation_data, 
-                    validation_labels,
-                    FLAGS.batch_size
-                )
+            model, history = train(
+                model, 
+                train_data, 
+                train_labels, 
+                validation_data, 
+                validation_labels,
+                FLAGS.batch_size,
+                FLAGS.max_epochs
+            )
 
-                # Backup the model.
-                model.save(FLAGS.model_name + '_' + batch + '.h5')
-                batch += 1
+            scores = model.evaluate(
+                x=test_data, 
+                y=test_labels, 
+                batch_size=FLAGS.batch_size, 
+                verbose=1
+            )
+
+            print('=========================================================================')
+            print('Finished training model.')
+            print('=========================================================================')
+
+            print('Calculating model scores...')
+            print('Model scores:')
+
+            for index in range(len(model.metrics_names)):
+                print("%s: %.2f%%" % (model.metrics_names[index], scores[index]*100))
+
+            print()
+
+            print('Making plots...')
+
+            # Plot training & validation top-1 accuracy values
+            plt.plot(history.history['top_1_categorical_accuracy'])
+            plt.plot(history.history['val_top_1_categorical_accuracy'])
+            plt.title('Top-1 Model Accuracy')
+            plt.ylabel('Accuracy')
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
+
+            # Plot training & validation top-3 accuracy values
+            plt.plot(history.history['top_3_categorical_accuracy'])
+            plt.plot(history.history['val_top_3_categorical_accuracy'])
+            plt.title('Top-3 Model Accuracy')
+            plt.ylabel('Accuracy')
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
+
+            # Plot training & validation loss values
+            plt.plot(history.history['loss'])
+            plt.plot(history.history['val_loss'])
+            plt.title('Model loss')
+            plt.ylabel('Loss')
+            plt.xlabel('Epoch')
+            plt.legend(['Train', 'Test'], loc='upper left')
+            plt.show()
         except KeyboardInterrupt:
             model.save(FLAGS.model_name + '_interrupted.h5')
             return
