@@ -1,15 +1,8 @@
-from __future__ import absolute_import, division, print_function
-
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import metrics, optimizers, layers, losses, models
 from tensorflow.keras import backend as K
-
-
-# Helper libraries
-import numpy as np
-import matplotlib.pyplot as plt
 
 import os
 
@@ -19,32 +12,16 @@ import sys
 
 import numpy as np
 
+import constants as c
+
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(name = 'data_path', default = 'extracted_actions', help = 'The path to the training data.')
 flags.DEFINE_string(name = 'model_name', default = 'model', help = 'The name to save the model with.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
-flags.DEFINE_integer(name = 'batch_size', default = 32, help = 'The batch size to use for training.')
-flags.DEFINE_integer(name = 'max_epochs', default = 200, help = 'The maximum amount of epochs.')
 
 FLAGS(sys.argv)
-
-
-def train(model, train_data, train_labels, validation_data, validation_labels, batch_size, max_epochs):
-    history = model.fit(
-        train_data, 
-        train_labels, 
-        validation_data=(validation_data, validation_labels),
-        epochs=max_epochs,
-        batch_size=batch_size,
-        verbose = 1
-    )
-
-    return model, history
-
-
-def validate(model, validation_data, validation_labels):
-    pass
 
 
 def load_data(data_path, train, validation, test, seed = None):
@@ -101,7 +78,6 @@ def load_data(data_path, train, validation, test, seed = None):
     print('Data meta data')
     print('{:20s} {:7d}'.format('# of games', len(data_paths)))
     print('{:20s} {:7d}'.format('# of data points', len(data_and_labels)))
-    print('Split seed: ' + str(seed))
     print('-------------------------------------------------------------------------------------')
     print('| {:25s} | {:25s} | {:25s} |'.format('Data', '# data points', '# data point dimensions'))
     print('|---------------------------|---------------------------|---------------------------|')
@@ -114,7 +90,7 @@ def load_data(data_path, train, validation, test, seed = None):
     print('-------------------------------------------------------------------------------------')
 
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
-
+    
 
 def top_3_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
@@ -124,98 +100,72 @@ def top_1_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=1)
 
 
-def main(argv):
+if __name__ == "__main__":
     print('Loading data...')
     train_data, train_labels, validation_data, validation_labels, test_data, test_labels = load_data(FLAGS.data_path, 0.7, 0.2, 0.1, FLAGS.seed)
-    print('Data loaded.')
+    print('Data loaded.')    
 
-    input_size = train_data.shape[1]
-    num_classes = train_labels.shape[1]
+    model = models.load_model(FLAGS.model_name, {"top_1_categorical_accuracy": top_1_categorical_accuracy, "top_3_categorical_accuracy": top_3_categorical_accuracy})
 
-    model = keras.models.Sequential()
-    model.add(layers.Dense(1024, activation=tf.nn.relu, input_shape=(input_size,)))
-    model.add(layers.Dropout(0.2))
-    model.add(layers.Dense(1024, activation=tf.nn.relu))
-    model.add(layers.Dropout(0.2))
-    model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
+    test_size = 300000
 
-    model.summary()
+    test_data = train_data[:test_size]
+    test_labels = train_labels[:test_size]
 
-    model.compile(loss=losses.categorical_crossentropy,
-                optimizer=optimizers.Adam(),
-                metrics=[top_1_categorical_accuracy, top_3_categorical_accuracy])
+    test_predictions = model.predict(test_data, verbose = 0)
     
-    print('=========================================================================')
-    print('Training model...')
-    print('=========================================================================')
+    np.set_printoptions(formatter={'float': lambda x: "{0:0.3f}".format(x)})
 
-    try:
-        model, history = train(
-            model, 
-            train_data, 
-            train_labels, 
-            validation_data, 
-            validation_labels,
-            FLAGS.batch_size,
-            FLAGS.max_epochs
-        )
+    correct_classifications = 0
 
-        model.save(FLAGS.model_name + '.h5')
+    for i in range(len(test_predictions)):
+        prediction = np.amax(test_predictions[i])
+        prediction_action = c.protoss_macro_actions[np.argmax(test_predictions[i])]
 
-        scores = model.evaluate(
-            x=test_data, 
-            y=test_labels, 
-            batch_size=FLAGS.batch_size, 
-            verbose=1
-        )
+        actual = np.amax(test_labels[i])
+        actual_action = c.protoss_macro_actions[np.argmax(test_labels[i])]
+        
+        if prediction_action == actual_action:
+            correct_classifications += 1
 
-        print('=========================================================================')
-        print('Finished training model.')
-        print('=========================================================================')
+        # print('_____________________________________________________________________________________')
+        # print('{:17s} - {:3f} - {:20s}'.format('Max prediction ', prediction, prediction_action))
+        # print('{:17s} - {:3f} - {:20s}'.format('Max actual ', actual, actual_action))
+        # print('_____________________________________________________________________________________')
 
-        print('Calculating model scores...')
-        print('Model scores:')
+    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------')
+    print('| {:30s} | {:12s} | {:18s} | {:12s} | {:22s} | {:22s} | {:22s} |'.format('Action', '# actual', 'Actual % of total', '# predicted', 'Predicted % of total', '# correctly predicted', '% correctly predicted' ))
+    print('|--------------------------------|--------------|--------------------|--------------|------------------------|------------------------|------------------------|')
+    for i in range(len(c.protoss_macro_actions)):
+        action_name = c.protoss_macro_actions[i]
 
-        for index in range(len(model.metrics_names)):
-            print('%s: %.2f%%' % (model.metrics_names[index], scores[index]*100))
+        actual = 0
+        for j in range(len(test_labels)):
+            if np.argmax(test_labels[j]) == i:
+                actual += 1
+        
+        percentage_actual = actual/test_size*100
 
-        print()
+        predicted = 0
+        correctly_predicted = 0
+        for j in range(len(test_predictions)):
+            if np.argmax(test_predictions[j]) == i:
+                predicted += 1
+            
+                if np.argmax(test_labels[j]) == i:
+                    correctly_predicted += 1
 
-        print('Making plots...')
+        percentage_predicted = predicted/test_size*100
+        if predicted == 0:
+            percentage_correctly_predicted = 0
+        else:
+            percentage_correctly_predicted = correctly_predicted/predicted*100
 
-        # Plot training & validation top-1 accuracy values
-        plt.plot(history.history['top_1_categorical_accuracy'])
-        plt.plot(history.history['val_top_1_categorical_accuracy'])
-        plt.title('Top-1 Model Accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
-        plt.show()
+        print('| {:30s} | {:12d} | {:18.2f} | {:12d} | {:22.2f} | {:22d} | {:22.2f} |'.format(action_name, actual, percentage_actual, predicted, percentage_predicted, correctly_predicted, percentage_correctly_predicted))
+    print('----------------------------------------------------------------------------------------------------------------------------------------------------------------')
 
-        # Plot training & validation top-3 accuracy values
-        plt.plot(history.history['top_3_categorical_accuracy'])
-        plt.plot(history.history['val_top_3_categorical_accuracy'])
-        plt.title('Top-3 Model Accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
-        plt.show()
-
-        # Plot training & validation loss values
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('Model loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
-        plt.show()
-    except KeyboardInterrupt:
-        model.save(FLAGS.model_name + '_interrupted.h5')
-        return
-    except KeyboardInterrupt:
-        model.save(FLAGS.model_name + '_error.h5')
-        return
-
-
-if __name__ == "__main__":
-    app.run(main)
+    print()
+    print('Correct classifications: {:d} out of {:d} possible resulting in a top-1 accuracy of {:.2f}%'.format(correct_classifications, test_size, correct_classifications/test_size*100))
+    print()
+    
+    
