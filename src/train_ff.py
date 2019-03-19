@@ -10,6 +10,7 @@ from tensorflow.keras import backend as K
 # Helper libraries
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 import os
 
@@ -41,10 +42,6 @@ def train(model, train_data, train_labels, validation_data, validation_labels, b
     )
 
     return model, history
-
-
-def validate(model, validation_data, validation_labels):
-    pass
 
 
 def load_data(data_path, train, validation, test, seed = None):
@@ -131,6 +128,12 @@ def main(argv):
 
     input_size = train_data.shape[1]
     num_classes = train_labels.shape[1]
+
+    if FLAGS.seed is not None:
+        random.seed(FLAGS.seed)
+
+    model_hidden_layers = [2, 3, 4]
+    hidden_layer_neurons = [random.randint(50, 1000) for _ in range(5)].sort()
 
     model = keras.models.Sequential()
     model.add(layers.Dense(1024, activation=tf.nn.relu, input_shape=(input_size,)))
