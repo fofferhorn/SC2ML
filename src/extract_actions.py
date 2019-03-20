@@ -25,7 +25,7 @@ flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'T
 flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
-flags.DEFINE_integer(name = 'start_from_replay', default = 2670, help = 'The replay number to start from.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 40, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)
@@ -109,6 +109,11 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                             controller.step()
 
                             time_step = 0
+                            resources = []
+                            upgrades = []
+                            in_progress = []
+                            friendly_unit_list = []
+                            enemy_unit_list = []
 
                             try:
                                 while True:
@@ -118,12 +123,21 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
 
                                     for action in obs.actions:
                                         mapped_action = get_macro_action(action)
+
                                         if mapped_action is not None:
-                                            resources = get_resources(obs.observation)
-                                            upgrades = get_upgrades(obs.observation.raw_data.player.upgrade_ids)
-                                            in_progress = get_units_in_progress(obs.observation.raw_data.units)
-                                            friendly_unit_list = get_friendly_unit_list(obs.observation.raw_data.units)
-                                            enemy_unit_list = get_enemy_unit_list(obs.observation.raw_data.units)
+                                            # print('________________________________________________________________________________')
+                                            # print('Time step (step/seconds): ' + str(time_step) + '/' + str(time_step/22.4))
+                                            # print('Resources (minerals, vespene, food(cap, used, army, workers), idle_workers, army_count, warp_gates): ' + str(resources[0]) + ', ' + str(resources[1]) + ', (' + str(resources[2]) + ', ' + str(resources[3]) + ', ' + str(resources[4]) + ', ' + str(resources[5]) + '), ' + str(resources[6]) + ', ' + str(resources[7]) + ', ' + str(resources[8]))
+                                            # print('In progress: ' + str(in_progress_dic(in_progress)))
+                                            # print('Upgrades: ' + str(upgrades_dic(upgrades)))
+                                            # print('Friendly buildings: ' + str(buildings_dic(friendly_unit_list)))
+                                            # print('Friendly units: ' + str(units_dic(friendly_unit_list)))
+                                            # print('Enemy buildings: ' + str(buildings_dic(enemy_unit_list)))
+                                            # print('Enemy units: ' + str(units_dic(enemy_unit_list)))
+                                            # print('--------------------------------------------------------------------------------')
+                                            # action_id = np.argmax(mapped_action)
+                                            # print('Action: ' + str(action_id) + ': ' + c.protoss_macro_actions[np.argmax(mapped_action)])
+                                            # print('________________________________________________________________________________')
 
                                             new_data_point = []
                                             new_data_point.append(time_step)        # 1
@@ -132,9 +146,15 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                                             new_data_point += in_progress           # 70
                                             new_data_point += friendly_unit_list    # 44
                                             new_data_point += enemy_unit_list       # 44
-                                            new_data_point += mapped_action    # 54
+                                            new_data_point += mapped_action         # 54
 
                                             player_game_data_points.append(new_data_point)
+
+                                        resources = get_resources(obs.observation)
+                                        upgrades = get_upgrades(obs.observation.raw_data.player.upgrade_ids)
+                                        in_progress = get_units_in_progress(obs.observation.raw_data.units)
+                                        friendly_unit_list = get_friendly_unit_list(obs.observation.raw_data.units)
+                                        enemy_unit_list = get_enemy_unit_list(obs.observation.raw_data.units)
 
                                     # The game has finished if there is a player_result
                                     if obs.player_result:
@@ -162,6 +182,44 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
             print('                                                    Something went wrong. Skipping this replay.')
 
 
+def in_progress_dic(in_progress):
+    in_progress_dic = {}
+    for i in range(len(in_progress)):
+        amount = in_progress[i]
+        if amount > 0:
+            in_progress_name = c.protoss_in_progress_to_name_mapper.get(i)
+            in_progress_dic[in_progress_name] = amount
+    return in_progress_dic
+
+
+def units_dic(units):
+    units_dic = {}
+    for i in range(16):
+        amount = units[i]
+        if amount > 0:
+            unit_name = c.protoss_unit_to_name_mapper.get(i)
+            units_dic[unit_name] = amount
+    return units_dic
+
+def buildings_dic(units):
+    buidlings_dic = {}
+    for i in range(16, len(units)):
+        amount = units[i]
+        if amount > 0:
+            buidling_name = c.protoss_unit_to_name_mapper.get(i)
+            buidlings_dic[buidling_name] = amount
+    return buidlings_dic
+
+def upgrades_dic(upgrades):
+    upgrades_dic = {}
+    for i in range(len(upgrades)):
+        amount = upgrades[i]
+        if amount > 0:
+            upgrade_name = c.protoss_upgrade_to_name_mapper.get(i)
+            upgrades_dic[upgrade_name] = amount
+    return upgrades_dic
+
+
 def get_resources(observation):
     resources = [
         observation.player_common.minerals,
@@ -186,14 +244,14 @@ def get_units_in_progress(units):
         if unit.alliance == 1:
             # Something is being built/something in the map. E.g. a building being built.
             if unit.build_progress < 1:
-                protoss_unit = c.protoss_unit_mapper.get(unit.unit_type)
+                protoss_unit = c.protoss_in_progress_unit_mapper.get(unit.unit_type)
                 in_progress_list[protoss_unit] += 1
 
             # Something is being built/something by something else. E.g. a building training a unit.
             if unit.orders is not None:
                 for order in unit.orders:
                     # The unit being built by e.g. a building.
-                    in_progress_entity = c.protoss_action_to_unit_mapper.get(order.ability_id) 
+                    in_progress_entity = c.protoss_in_progress_ability_to_unit_mapper.get(order.ability_id) 
         
                     if in_progress_entity is not None:
                         in_progress_list[in_progress_entity] += 1
@@ -206,7 +264,7 @@ def get_friendly_unit_list(units):
     unit_list = [0] * 44
 
     for unit in units:
-        if unit.alliance == 1:
+        if unit.alliance == 1 and unit.build_progress == 1.0:
             protoss_unit = c.protoss_unit_mapper.get(unit.unit_type)
             if protoss_unit is not None:
                 unit_list[protoss_unit] += 1
@@ -241,7 +299,7 @@ def get_upgrades(upgrade_ids):
 def get_macro_action(action):
     actions = [0] * 54
     if hasattr(action, "action_raw") and hasattr(action.action_raw, "unit_command"):
-        mapped_action = c.protoss_action_to_unit_mapper.get(action.action_raw.unit_command.ability_id)
+        mapped_action = c.protoss_ability_to_unit_mapper.get(action.action_raw.unit_command.ability_id)
 
         if mapped_action is not None:
             actions[mapped_action] += 1

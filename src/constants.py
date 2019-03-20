@@ -1,45 +1,49 @@
+protoss_in_progress_to_index_mapper = {
+
+}
+
 # Mapping of unit_id to index in list.
 protoss_unit_mapper = {
-    # Units
-    84: 0,      # Probe
-    73: 1,      # Zealot
-    77: 2,      # Sentry
-    311: 3,     # Adept
-    74: 4,      # Stalker
-    75: 5,      # HighTemplar
-    76: 6,      # DarkTemplar
-    141: 7,     # Archon
-    4: 8,       # Colossus
-    694: 9,     # Disruptor
-    82: 10,     # Observer
-    83: 11,     # Immortal
-    81: 12,     # WarpPrism
-    78: 13,     # Phoenix
-    495: 14,    # Oracle
-    80: 15,     # VoidRay
-    496: 16,    # Tempest
-    79: 17,     # Carrier
-    85: 18,     # Interceptor
-    10: 19,     # Mothership
-    488: 20,    # MothershipCore
-
     # Buildings
-    59: 21,     # Nexus
-    60: 22,     # Pylon
-    61: 23,     # Assimilator
-    62: 24,     # Gateway
-    133: 25,    # WarpGate
-    72: 26,     # CyberneticsCore
-    65: 27,     # TwilightCouncil
-    68: 28,     # TemplarArchive
-    69: 29,     # DarkShrine
-    63: 30,     # Forge
-    66: 31,     # PhotonCannon
-    1910: 32,   # ShieldBattery
-    70: 33,     # RoboticsBay
-    71: 34,     # RoboticsFacility
-    67: 35,     # Stargate
-    64: 36,     # FleetBeacon
+    61: 0,     # Assimilator
+    72: 1,     # CyberneticsCore
+    69: 2,     # DarkShrine
+    64: 3,     # FleetBeacon
+    63: 4,     # Forge
+    62: 5,     # Gateway
+    59: 6,     # Nexus
+    66: 7,     # PhotonCannon
+    60: 8,     # Pylon
+    70: 9,     # RoboticsBay
+    71: 10,    # RoboticsFacility
+    1910: 11,  # ShieldBattery
+    67: 12,    # Stargate
+    68: 13,    # TemplarArchive
+    65: 14,    # TwilightCouncil
+    133: 15,   # WarpGate
+
+    # Units
+    84: 16,     # Probe
+    73: 17,     # Zealot
+    77: 18,     # Sentry
+    311: 19,    # Adept
+    74: 20,     # Stalker
+    75: 21,     # HighTemplar
+    76: 22,     # DarkTemplar
+    141: 23,    # Archon
+    4: 24,      # Colossus
+    694: 25,    # Disruptor
+    82: 26,     # Observer
+    83: 27,     # Immortal
+    81: 28,     # WarpPrism
+    78: 29,     # Phoenix
+    495: 30,    # Oracle
+    80: 31,     # VoidRay
+    496: 32,    # Tempest
+    79: 33,     # Carrier
+    85: 34,     # Interceptor
+    10: 35,     # Mothership
+    488: 36,    # MothershipCore
 
     # Abilities
     801: 37,    # AdeptPhaseShift
@@ -51,7 +55,7 @@ protoss_unit_mapper = {
     732: 43     # StasisTrap
 }
 
-# Mapping of upgrades to indexes in list
+# Mapping of upgrades (ability_ids) to indexes in list
 protoss_upgrade_mapper = {
     1: 0,       # CARRIERLAUNCHSPEEDUPGRADE
     39: 1,      # PROTOSSGROUNDWEAPONSLEVEL1
@@ -81,114 +85,253 @@ protoss_upgrade_mapper = {
     141: 25     # DARKTEMPLARBLINKUPGRADE
 }
 
-# # Mapping of macro actions to the buildings/units/upgrades they will turn into. 
-# protoss_action_to_unit_mapper = {
-#     # Build
-#     882: 23,    # BUILD_ASSIMILATOR
-#     894: 26,    # BUILD_CYBERNETICSCORE
-#     891: 29,    # BUILD_DARKSHRINE
-#     885: 36,    # BUILD_FLEETBEACON
-#     884: 30,    # BUILD_FORGE
-#     883: 24,    # BUILD_GATEWAY
-#     1042: 18,   # BUILD_INTERCEPTORS
-#     880: 21,    # BUILD_NEXUS
-#     887: 31,    # BUILD_PHOTONCANNON
-#     881: 22,    # BUILD_PYLON
-#     892: 33,   # BUILD_ROBOTICSBAY
-#     893: 34,   # BUILD_ROBOTICSFACILITY
-#     895: 32,   # BUILD_SHIELDBATTERY
-#     889: 35,   # BUILD_STARGATE
-#     890: 28,   # BUILD_TEMPLARARCHIVE
-#     886: 27,   # BUILD_TWILIGHTCOUNCIL
+protoss_in_progress_unit_mapper = {
+    # Buildings
+    61: 0,     # Assimilator
+    72: 1,     # CyberneticsCore
+    69: 2,     # DarkShrine
+    64: 3,     # FleetBeacon
+    63: 4,     # Forge
+    62: 5,     # Gateway
+    59: 6,     # Nexus
+    66: 7,     # PhotonCannon
+    60: 8,     # Pylon
+    70: 9,     # RoboticsBay
+    71: 10,    # RoboticsFacility
+    1910: 11,  # ShieldBattery
+    67: 12,    # Stargate
+    68: 13,    # TemplarArchive
+    65: 14,    # TwilightCouncil
+    133: 15,   # WarpGate
 
-#     # Morph
-#     1766: 7,  # MORPH_ARCHON
-#     1520: 24,  # MORPH_GATEWAY
-#     1847: 19,  # MORPH_MOTHERSHIP
-#     1518: 25,  # MORPH_WARPGATE
+    # Units
+    84: 16,     # Probe
+    73: 17,     # Zealot
+    77: 18,     # Sentry
+    311: 19,    # Adept
+    74: 20,     # Stalker
+    75: 21,     # HighTemplar
+    76: 22,     # DarkTemplar
+    141: 23,    # Archon
+    4: 24,      # Colossus
+    694: 25,    # Disruptor
+    82: 26,     # Observer
+    83: 27,     # Immortal
+    81: 28,     # WarpPrism
+    78: 29,     # Phoenix
+    495: 30,    # Oracle
+    80: 31,     # VoidRay
+    496: 32,    # Tempest
+    79: 33,     # Carrier
+    85: 34,     # Interceptor
+    10: 35,     # Mothership
+    488: 36,    # MothershipCore
 
-#     # Research
-#     1594: 24,  # RESEARCH_ADEPTRESONATINGGLAIVES
-#     1593: 22,  # RESEARCH_BLINK
-#     1592: 21,  # RESEARCH_CHARGE
-#     1097: 12,  # RESEARCH_EXTENDEDTHERMALLANCE
-#     1093: 10,  # RESEARCH_GRAVITICBOOSTER
-#     1094: 11,  # RESEARCH_GRAVITICDRIVE
-#     44: 0,    # RESEARCH_INTERCEPTORGRAVITONCATAPULT
-#     46: 23,    # RESEARCH_PHOENIXANIONPULSECRYSTALS
-#     1565: 17,  # RESEARCH_PROTOSSAIRARMORLEVEL1
-#     1566: 18,  # RESEARCH_PROTOSSAIRARMORLEVEL2
-#     1567: 19,  # RESEARCH_PROTOSSAIRARMORLEVEL3
-#     1562: 14,  # RESEARCH_PROTOSSAIRWEAPONSLEVEL1
-#     1563: 15,  # RESEARCH_PROTOSSAIRWEAPONSLEVEL2
-#     1564: 16,  # RESEARCH_PROTOSSAIRWEAPONSLEVEL3
-#     1065: 4,  # RESEARCH_PROTOSSGROUNDARMORLEVEL1
-#     1066: 5,  # RESEARCH_PROTOSSGROUNDARMORLEVEL2
-#     1067: 6,  # RESEARCH_PROTOSSGROUNDARMORLEVEL3
-#     1062: 1,  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL1
-#     1063: 2,  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL2
-#     1064: 3,  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL3
-#     1068: 7,  # RESEARCH_PROTOSSSHIELDSLEVEL1
-#     1069: 8,  # RESEARCH_PROTOSSSHIELDSLEVEL2
-#     1070: 9,  # RESEARCH_PROTOSSSHIELDSLEVEL3
-#     1126: 13,  # RESEARCH_PSISTORM
-#     2720: 25,  # RESEARCH_SHADOWSTRIKE
-#     1568: 20,  # RESEARCH_WARPGATE
+    # Abilities
+    801: 37,    # AdeptPhaseShift
+    135: 38,    # ForceField
+    1911: 39,   # ObserverSurveillanceMode
+    733: 40,    # DisruptorPhased
+    136: 41,    # WarpPrismPhasing
+    894: 42,    # PylonOvercharged
+    732: 43     # StasisTrap
+}
 
-#     # Train
-#     922: 3,   # TRAIN_ADEPT
-#     948: 17,   # TRAIN_CARRIER
-#     978: 8,   # TRAIN_COLOSSUS
-#     920: 6,   # TRAIN_DARKTEMPLAR
-#     994: 9,   # TRAIN_DISRUPTOR
-#     919: 5,   # TRAIN_HIGHTEMPLAR
-#     979: 11,   # TRAIN_IMMORTAL
-#     110: 19,   # TRAIN_MOTHERSHIP
-#     1853: 20,  # TRAIN_MOTHERSHIPCORE
-#     977: 10,   # TRAIN_OBSERVER
-#     954: 14,   # TRAIN_ORACLE
-#     946: 13,   # TRAIN_PHOENIX
-#     1006: 0,  # TRAIN_PROBE
-#     921: 2,   # TRAIN_SENTRY
-#     917: 4,   # TRAIN_STALKER
-#     955: 16,   # TRAIN_TEMPEST
-#     950: 15,   # TRAIN_VOIDRAY
-#     976: 12,   # TRAIN_WARPPRISM
-#     916: 1,   # TRAIN_ZEALOT
+protoss_in_progress_upgrade_mapper = {
+    0: 44,      # CARRIERLAUNCHSPEEDUPGRADE
+    1: 45,     # PROTOSSGROUNDWEAPONSLEVEL1
+    2: 46,     # PROTOSSGROUNDWEAPONSLEVEL2
+    3: 47,     # PROTOSSGROUNDWEAPONSLEVEL3
+    4: 48,     # PROTOSSGROUNDARMORSLEVEL1
+    5: 49,     # PROTOSSGROUNDARMORSLEVEL2
+    6: 50,     # PROTOSSGROUNDARMORSLEVEL3
+    7: 51,     # PROTOSSSHIELDSLEVEL1
+    8: 52,     # PROTOSSSHIELDSLEVEL2
+    9: 53,     # PROTOSSSHIELDSLEVEL3
+    10: 54,     # OBSERVERGRAVITICBOOSTER
+    11: 55,     # GRAVITICDRIVE
+    12: 56,     # EXTENDEDTHERMALLANCE
+    13: 57,     # PSISTORMTECH
+    14: 58,     # PROTOSSAIRWEAPONSLEVEL1
+    15: 59,     # PROTOSSAIRWEAPONSLEVEL2
+    16: 60,     # PROTOSSAIRWEAPONSLEVEL3
+    17: 61,     # PROTOSSAIRARMORSLEVEL1
+    18: 62,     # PROTOSSAIRARMORSLEVEL2
+    19: 63,     # PROTOSSAIRARMORSLEVEL3
+    20: 64,     # WARPGATERESEARCH
+    21: 65,     # CHARGE
+    22: 66,     # BLINKTECH
+    23: 67,     # PHOENIXRANGEUPGRADE
+    24: 68,    # ADEPTPIERCINGATTACK
+    25: 69     # DARKTEMPLARBLINKUPGRADE
+}
 
-#     # TrainWarp
-#     1419: 3,  # TRAINWARP_ADEPT
-#     1417: 6,  # TRAINWARP_DARKTEMPLAR
-#     1416: 5,  # TRAINWARP_HIGHTEMPLAR
-#     1418: 2,  # TRAINWARP_SENTRY
-#     1414: 4,  # TRAINWARP_STALKER
-#     1413: 1,  # TRAINWARP_ZEALOT
+protoss_in_progress_to_name_mapper = {
+    # Buildings
+    0: 'Assimilator',
+    1: 'CyberneticsCore',
+    2: 'DarkShrine',
+    3: 'FleetBeacon',
+    4: 'Forge',
+    5: 'Gateway',
+    6: 'Nexus',
+    7: 'PhotonCannon',
+    8: 'Pylon',
+    9: 'RoboticsBay',
+    10: 'RoboticsFacility',
+    11: 'ShieldBattery',
+    12: 'Stargate',
+    13: 'TemplarArchive',
+    14: 'TwilightCouncil',
+    15: 'WarpGate',
 
-#     # # Cancel
-#     # 3659,  # CANCEL
-#     # 313,   # CANCELSLOT_ADDON
-#     # 305,   # CANCELSLOT_QUEUE1
-#     # 307,   # CANCELSLOT_QUEUE5
-#     # 309,   # CANCELSLOT_QUEUECANCELTOSELECTION
-#     # 1832,  # CANCELSLOT_QUEUEPASSIVE
-#     # 314,   # CANCEL_BUILDINPROGRESS
-#     # 3671,  # CANCEL_LAST
-#     # 1848,  # CANCEL_MORPHMOTHERSHIP
-#     # 304,   # CANCEL_QUEUE1
-#     # 306,   # CANCEL_QUEUE5
-#     # 312,   # CANCEL_QUEUEADDON
-#     # 308,   # CANCEL_QUEUECANCELTOSELECTION
-#     # 1831,  # CANCEL_QUEUEPASIVE
-#     # 1833,  # CANCEL_QUEUEPASSIVECANCELTOSELECTION
+    # Units
+    16: 'Probe',
+    17: 'Zealot',
+    18: 'Sentry',
+    19: 'Adept',
+    20: 'Stalker',
+    21: 'HighTemplar',
+    22: 'DarkTemplar',
+    23: 'Archon',
+    24: 'Colossus',
+    25: 'Disruptor',
+    26: 'Observer',
+    27: 'Immortal',
+    28: 'WarpPrism',
+    29: 'Phoenix',
+    30: 'Oracle',
+    31: 'VoidRay',
+    32: 'Tempest',
+    33: 'Carrier',
+    34: 'Interceptor',
+    35: 'Mothership',
+    36: 'MothershipCore',
 
-#     # # Stop
-#     # 3665,  # STOP
-#     # 2057,  # STOP_BUILDING
-#     # 4,     # STOP_STOP
-# }
+    # Abilities
+    37: 'AdeptPhaseShift',
+    38: 'ForceField',
+    39: 'ObserverSurveillanceMode',
+    40: 'DisruptorPhased',
+    41: 'WarpPrismPhasing',
+    42: 'PylonOvercharged',
+    43: 'StasisTrap',
 
-# Mapping of macro actions to the buildings/units/upgrades they will turn into. 
-protoss_action_to_unit_mapper = {
+    # Upgrades
+    44: 'CARRIERLAUNCHSPEEDUPGRADE',
+    45: 'PROTOSSGROUNDWEAPONSLEVEL1',
+    46: 'PROTOSSGROUNDWEAPONSLEVEL2',
+    47: 'PROTOSSGROUNDWEAPONSLEVEL3',
+    48: 'PROTOSSGROUNDARMORSLEVEL1',
+    49: 'PROTOSSGROUNDARMORSLEVEL2',
+    50: 'PROTOSSGROUNDARMORSLEVEL3',
+    51: 'PROTOSSSHIELDSLEVEL1',
+    52: 'PROTOSSSHIELDSLEVEL2',
+    53: 'PROTOSSSHIELDSLEVEL3',
+    54: 'OBSERVERGRAVITICBOOSTER',
+    55: 'GRAVITICDRIVE',
+    56: 'EXTENDEDTHERMALLANCE',
+    57: 'PSISTORMTECH',
+    58: 'PROTOSSAIRWEAPONSLEVEL1',
+    59: 'PROTOSSAIRWEAPONSLEVEL2',
+    60: 'PROTOSSAIRWEAPONSLEVEL3',
+    61: 'PROTOSSAIRARMORSLEVEL1',
+    62: 'PROTOSSAIRARMORSLEVEL2',
+    63: 'PROTOSSAIRARMORSLEVEL3',
+    64: 'WARPGATERESEARCH',
+    65: 'CHARGE',
+    66: 'BLINKTECH',
+    67: 'PHOENIXRANGEUPGRADE',
+    68: 'ADEPTPIERCINGATTACK',
+    69: 'DARKTEMPLARBLINKUPGRADE'
+}
+
+# Mapping of ability_ids to the buildings/units/upgrades they will turn into. 
+protoss_in_progress_ability_to_unit_mapper = {
+    # Build
+    882: protoss_in_progress_unit_mapper.get(61),    # BUILD_ASSIMILATOR
+    894: protoss_in_progress_unit_mapper.get(72),    # BUILD_CYBERNETICSCORE
+    891: protoss_in_progress_unit_mapper.get(69),    # BUILD_DARKSHRINE
+    885: protoss_in_progress_unit_mapper.get(64),    # BUILD_FLEETBEACON
+    884: protoss_in_progress_unit_mapper.get(63),    # BUILD_FORGE
+    883: protoss_in_progress_unit_mapper.get(62),    # BUILD_GATEWAY
+    1042: protoss_in_progress_unit_mapper.get(85),   # BUILD_INTERCEPTORS
+    880: protoss_in_progress_unit_mapper.get(59),    # BUILD_NEXUS
+    887: protoss_in_progress_unit_mapper.get(66),    # BUILD_PHOTONCANNON
+    881: protoss_in_progress_unit_mapper.get(60),    # BUILD_PYLON
+    892: protoss_in_progress_unit_mapper.get(70),   # BUILD_ROBOTICSBAY
+    893: protoss_in_progress_unit_mapper.get(71),   # BUILD_ROBOTICSFACILITY
+    895: protoss_in_progress_unit_mapper.get(1910),   # BUILD_SHIELDBATTERY
+    889: protoss_in_progress_unit_mapper.get(67),   # BUILD_STARGATE
+    890: protoss_in_progress_unit_mapper.get(68),   # BUILD_TEMPLARARCHIVE
+    886: protoss_in_progress_unit_mapper.get(65),   # BUILD_TWILIGHTCOUNCIL
+
+    # Morph
+    1766: protoss_in_progress_unit_mapper.get(141),  # MORPH_ARCHON
+    1520: protoss_in_progress_unit_mapper.get(62),  # MORPH_GATEWAY
+    1847: protoss_in_progress_unit_mapper.get(10),  # MORPH_MOTHERSHIP
+    1518: protoss_in_progress_unit_mapper.get(133),  # MORPH_WARPGATE
+
+    # Research
+    1594: protoss_in_progress_upgrade_mapper.get(130),  # RESEARCH_ADEPTRESONATINGGLAIVES
+    1593: protoss_in_progress_upgrade_mapper.get(87),  # RESEARCH_BLINK
+    1592: protoss_in_progress_upgrade_mapper.get(86),  # RESEARCH_CHARGE
+    1097: protoss_in_progress_upgrade_mapper.get(50),  # RESEARCH_EXTENDEDTHERMALLANCE
+    1093: protoss_in_progress_upgrade_mapper.get(48),  # RESEARCH_GRAVITICBOOSTER
+    1094: protoss_in_progress_upgrade_mapper.get(49),  # RESEARCH_GRAVITICDRIVE
+    44: protoss_in_progress_upgrade_mapper.get(1),    # RESEARCH_INTERCEPTORGRAVITONCATAPULT
+    46: protoss_in_progress_upgrade_mapper.get(99),    # RESEARCH_PHOENIXANIONPULSECRYSTALS
+    1565: protoss_in_progress_upgrade_mapper.get(81),  # RESEARCH_PROTOSSAIRARMORLEVEL1
+    1566: protoss_in_progress_upgrade_mapper.get(82),  # RESEARCH_PROTOSSAIRARMORLEVEL2
+    1567: protoss_in_progress_upgrade_mapper.get(83),  # RESEARCH_PROTOSSAIRARMORLEVEL3
+    1562: protoss_in_progress_upgrade_mapper.get(78),  # RESEARCH_PROTOSSAIRWEAPONSLEVEL1
+    1563: protoss_in_progress_upgrade_mapper.get(79),  # RESEARCH_PROTOSSAIRWEAPONSLEVEL2
+    1564: protoss_in_progress_upgrade_mapper.get(80),  # RESEARCH_PROTOSSAIRWEAPONSLEVEL3
+    1065: protoss_in_progress_upgrade_mapper.get(42),  # RESEARCH_PROTOSSGROUNDARMORLEVEL1
+    1066: protoss_in_progress_upgrade_mapper.get(43),  # RESEARCH_PROTOSSGROUNDARMORLEVEL2
+    1067: protoss_in_progress_upgrade_mapper.get(44),  # RESEARCH_PROTOSSGROUNDARMORLEVEL3
+    1062: protoss_in_progress_upgrade_mapper.get(39),  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL1
+    1063: protoss_in_progress_upgrade_mapper.get(40),  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL2
+    1064: protoss_in_progress_upgrade_mapper.get(41),  # RESEARCH_PROTOSSGROUNDWEAPONSLEVEL3
+    1068: protoss_in_progress_upgrade_mapper.get(45),  # RESEARCH_PROTOSSSHIELDSLEVEL1
+    1069: protoss_in_progress_upgrade_mapper.get(46),  # RESEARCH_PROTOSSSHIELDSLEVEL2
+    1070: protoss_in_progress_upgrade_mapper.get(47),  # RESEARCH_PROTOSSSHIELDSLEVEL3
+    1126: protoss_in_progress_upgrade_mapper.get(52),  # RESEARCH_PSISTORM
+    2720: protoss_in_progress_upgrade_mapper.get(141),  # RESEARCH_SHADOWSTRIKE
+    1568: protoss_in_progress_upgrade_mapper.get(84),  # RESEARCH_WARPGATE
+
+    # Train
+    922: protoss_in_progress_unit_mapper.get(311),   # TRAIN_ADEPT
+    948: protoss_in_progress_unit_mapper.get(79),   # TRAIN_CARRIER
+    978: protoss_in_progress_unit_mapper.get(4),   # TRAIN_COLOSSUS
+    920: protoss_in_progress_unit_mapper.get(76),   # TRAIN_DARKTEMPLAR
+    994: protoss_in_progress_unit_mapper.get(694),   # TRAIN_DISRUPTOR
+    919: protoss_in_progress_unit_mapper.get(75),   # TRAIN_HIGHTEMPLAR
+    979: protoss_in_progress_unit_mapper.get(83),   # TRAIN_IMMORTAL
+    110: protoss_in_progress_unit_mapper.get(10),   # TRAIN_MOTHERSHIP
+    1853: protoss_in_progress_unit_mapper.get(488),  # TRAIN_MOTHERSHIPCORE
+    977: protoss_in_progress_unit_mapper.get(82),   # TRAIN_OBSERVER
+    954: protoss_in_progress_unit_mapper.get(495),   # TRAIN_ORACLE
+    946: protoss_in_progress_unit_mapper.get(78),   # TRAIN_PHOENIX
+    1006: protoss_in_progress_unit_mapper.get(84),  # TRAIN_PROBE
+    921: protoss_in_progress_unit_mapper.get(77),   # TRAIN_SENTRY
+    917: protoss_in_progress_unit_mapper.get(74),   # TRAIN_STALKER
+    955: protoss_in_progress_unit_mapper.get(496),   # TRAIN_TEMPEST
+    950: protoss_in_progress_unit_mapper.get(80),   # TRAIN_VOIDRAY
+    976: protoss_in_progress_unit_mapper.get(81),   # TRAIN_WARPPRISM
+    916: protoss_in_progress_unit_mapper.get(73),   # TRAIN_ZEALOT
+
+    # TrainWarp
+    1419: protoss_in_progress_unit_mapper.get(311),  # TRAINWARP_ADEPT
+    1417: protoss_in_progress_unit_mapper.get(76),  # TRAINWARP_DARKTEMPLAR
+    1416: protoss_in_progress_unit_mapper.get(75),  # TRAINWARP_HIGHTEMPLAR
+    1418: protoss_in_progress_unit_mapper.get(77),  # TRAINWARP_SENTRY
+    1414: protoss_in_progress_unit_mapper.get(74),  # TRAINWARP_STALKER
+    1413: protoss_in_progress_unit_mapper.get(73),  # TRAINWARP_ZEALOT
+}
+
+# Mapping of macro abiliti_ids to the buildings/units/upgrades they will turn into. 
+protoss_ability_to_unit_mapper = {
     # Build
     882: 0,    # BUILD_ASSIMILATOR
     894: 1,    # BUILD_CYBERNETICSCORE
@@ -271,81 +414,7 @@ protoss_action_to_unit_mapper = {
     1413: 53,  # TRAINWARP_ZEALOT
 }
 
-output_to_action = [
-    # Build
-    0,  # ASSIMILATOR
-    1,  # CYBERNETICSCORE
-    2,  # DARKSHRINE
-    3,  # FLEETBEACON
-    4,  # FORGE
-    5,  # GATEWAY
-    6,  # INTERCEPTORS
-    7,  # NEXUS
-    8,  # PHOTONCANNON
-    9,  # PYLON
-    10, # ROBOTICSBAY
-    11, # ROBOTICSFACILITY
-    12, # SHIELDBATTERY
-    13, # STARGATE
-    14, # TEMPLARARCHIVE
-    15, # TWILIGHTCOUNCIL
-
-    # Morph
-    16, # ARCHON
-    17, # MOTHERSHIP
-    18, # WARPGATE
-
-    # Research
-    19, # ADEPTRESONATINGGLAIVES
-    20, # BLINK
-    21, # CHARGE
-    22, # EXTENDEDTHERMALLANCE
-    23, # GRAVITICBOOSTER
-    24, # GRAVITICDRIVE
-    25, # INTERCEPTORGRAVITONCATAPULT
-    26, # PHOENIXANIONPULSECRYSTALS
-    27, # PROTOSSAIRARMOR
-    28, # PROTOSSAIRWEAPONS
-    29, # PROTOSSGROUNDARMOR
-    30, # PROTOSSGROUNDWEAPONS
-    31, # PROTOSSSHIELDS
-    32, # PSISTORM
-    33, # SHADOWSTRIKE
-    34, # WARPGATE
-
-    # Train
-    35, # ADEPT
-    36, # CARRIER
-    37, # COLOSSUS
-    38, # DARKTEMPLAR
-    39, # DISRUPTOR
-    40, # HIGHTEMPLAR
-    41, # IMMORTAL
-    42, # MOTHERSHIP
-    43, # MOTHERSHIPCORE
-    44, # OBSERVER
-    45, # ORACLE
-    46, # PHOENIX
-    47, # PROBE
-    48, # SENTRY
-    49, # STALKER
-    50, # TEMPEST
-    51, # VOIDRAY
-    52, # WARPPRISM
-    53  # ZEALOT
-]
-
-macro_actions = [
-    "Build", 
-    "Cancel", 
-    "Morph", 
-    "Research", 
-    "Stop", 
-    "Train", 
-    "TrainWarp"
-]
-
-# The amount of different macro actions a player can take. 
+# The names of the different macro actions a player can take. 
 protoss_macro_actions = [
     # Build
     'ASSIMILATOR',
@@ -409,3 +478,86 @@ protoss_macro_actions = [
     'WARPPRISM',
     'ZEALOT'
 ]
+
+# Mapping of unit_id to index in list.
+protoss_unit_to_name_mapper = {
+    # Buildings
+    0: 'Assimilator',
+    1: 'CyberneticsCore',
+    2: 'DarkShrine',
+    3: 'FleetBeacon',
+    4: 'Forge',
+    5: 'Gateway',
+    6: 'Nexus',
+    7: 'PhotonCannon',
+    8: 'Pylon',
+    9: 'RoboticsBay',
+    10: 'RoboticsFacility',
+    11: 'ShieldBattery',
+    12: 'Stargate',
+    13: 'TemplarArchive',
+    14: 'TwilightCouncil',
+    15: 'WarpGate',
+
+    # Units
+    16: 'Probe',
+    17: 'Zealot',
+    18: 'Sentry',
+    19: 'Adept',
+    20: 'Stalker',
+    21: 'HighTemplar',
+    22: 'DarkTemplar',
+    23: 'Archon',
+    24: 'Colossus',
+    25: 'Disruptor',
+    26: 'Observer',
+    27: 'Immortal',
+    28: 'WarpPrism',
+    29: 'Phoenix',
+    30: 'Oracle',
+    31: 'VoidRay',
+    32: 'Tempest',
+    33: 'Carrier',
+    34: 'Interceptor',
+    35: 'Mothership',
+    36: 'MothershipCore',
+
+    # Abilities
+    37: 'AdeptPhaseShift',
+    38: 'ForceField',
+    39: 'ObserverSurveillanceMode',
+    40: 'DisruptorPhased',
+    41: 'WarpPrismPhasing',
+    42: 'PylonOvercharged',
+    43: 'StasisTrap'
+}
+
+# Mapping of upgrades (ability_ids) to indexes in list
+protoss_upgrade_to_name_mapper = {
+    0: 'CARRIERLAUNCHSPEEDUPGRADE',
+    1: 'PROTOSSGROUNDWEAPONSLEVEL1',
+    2: 'PROTOSSGROUNDWEAPONSLEVEL2',
+    3: 'PROTOSSGROUNDWEAPONSLEVEL3',
+    4: 'PROTOSSGROUNDARMORSLEVEL1',
+    5: 'PROTOSSGROUNDARMORSLEVEL2',
+    6: 'PROTOSSGROUNDARMORSLEVEL3',
+    7: 'PROTOSSSHIELDSLEVEL1',
+    8: 'PROTOSSSHIELDSLEVEL2',
+    9: 'PROTOSSSHIELDSLEVEL3',
+    10: 'OBSERVERGRAVITICBOOSTER',
+    11: 'GRAVITICDRIVE',
+    12: 'EXTENDEDTHERMALLANCE',
+    13: 'PSISTORMTECH',
+    14: 'PROTOSSAIRWEAPONSLEVEL1',
+    15: 'PROTOSSAIRWEAPONSLEVEL2',
+    16: 'PROTOSSAIRWEAPONSLEVEL3',
+    17: 'PROTOSSAIRARMORSLEVEL1',
+    18: 'PROTOSSAIRARMORSLEVEL2',
+    19: 'PROTOSSAIRARMORSLEVEL3',
+    20: 'WARPGATERESEARCH',
+    21: 'CHARGE',
+    22: 'BLINKTECH',
+    23: 'PHOENIXRANGEUPGRADE',
+    24: 'ADEPTPIERCINGATTACK',
+    25: 'DARKTEMPLARBLINKUPGRADE'
+}

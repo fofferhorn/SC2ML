@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import metrics, optimizers, layers, losses, models
+from tensorflow.keras import metrics, optimizers, layers, losses, models, callbacks
 from tensorflow.keras import backend as K
 
 
@@ -25,20 +25,22 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(name = 'data_path', default = 'extracted_actions', help = 'The path to the training data.')
 flags.DEFINE_string(name = 'model_name', default = 'model', help = 'The name to save the model with.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
-flags.DEFINE_integer(name = 'batch_size', default = 32, help = 'The batch size to use for training.')
-flags.DEFINE_integer(name = 'max_epochs', default = 200, help = 'The maximum amount of epochs.')
+flags.DEFINE_integer(name = 'batch_size', default = 100, help = 'The batch size to use for training.')
+flags.DEFINE_integer(name = 'max_epochs', default = 500, help = 'The maximum amount of epochs.')
 
 FLAGS(sys.argv)
 
 
 def train(model, train_data, train_labels, validation_data, validation_labels, batch_size, max_epochs):
+    es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='min')
     history = model.fit(
         train_data, 
         train_labels, 
         validation_data=(validation_data, validation_labels),
         epochs=max_epochs,
         batch_size=batch_size,
-        verbose = 1
+        verbose = 1,
+        callbacks=[es]
     )
 
     return model, history
@@ -68,7 +70,10 @@ def load_data(data_path, train, validation, test, seed = None):
     data = []
     labels = []
     for data_point in data_and_labels:
-        data.append(data_point[:-54])
+        l1 = [data_point[0]]
+        l2 = data_point[3:-54]
+        l1.extend(l2)
+        data.append(l1)
         labels.append(data_point[-54:])
 
     data = keras.utils.normalize(data, axis=-1, order=2)
@@ -132,14 +137,9 @@ def main(argv):
     if FLAGS.seed is not None:
         random.seed(FLAGS.seed)
 
-    model_hidden_layers = [2, 3, 4]
-    hidden_layer_neurons = [random.randint(50, 1000) for _ in range(5)].sort()
-
     model = keras.models.Sequential()
-    model.add(layers.Dense(1024, activation=tf.nn.relu, input_shape=(input_size,)))
-    model.add(layers.Dropout(0.2))
-    model.add(layers.Dense(1024, activation=tf.nn.relu))
-    model.add(layers.Dropout(0.2))
+    model.add(layers.Dense(331, activation=tf.nn.relu, input_shape=(input_size,)))
+    model.add(layers.Dense(331, activation=tf.nn.relu))
     model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
 
     model.summary()
@@ -194,6 +194,7 @@ def main(argv):
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
         plt.show()
+        plt.close()
 
         # Plot training & validation top-3 accuracy values
         plt.plot(history.history['top_3_categorical_accuracy'])
@@ -203,6 +204,7 @@ def main(argv):
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
         plt.show()
+        plt.close()
 
         # Plot training & validation loss values
         plt.plot(history.history['loss'])
@@ -212,6 +214,8 @@ def main(argv):
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
         plt.show()
+        plt.close()
+        
     except KeyboardInterrupt:
         model.save(FLAGS.model_name + '_interrupted.h5')
         return

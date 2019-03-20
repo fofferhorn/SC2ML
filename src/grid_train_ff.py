@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import metrics, optimizers, layers, losses, models
+from tensorflow.keras import metrics, optimizers, layers, losses, models, callbacks
 from tensorflow.keras import backend as K
 
 
@@ -24,21 +24,23 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(name = 'data_path', default = 'extracted_actions', help = 'The path to the training data.')
 flags.DEFINE_string(name = 'model_name', default = 'model', help = 'The name to save the model with.')
 flags.DEFINE_string(name = 'settings_file', default = 'grid_settings.txt', help = 'The settings of the grid search.')
-flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
-flags.DEFINE_integer(name = 'batch_size', default = 50, help = 'The batch size to use for training.')
-flags.DEFINE_integer(name = 'max_epochs', default = 300, help = 'The maximum amount of epochs.')
+flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data and seed the random number generator.')
+flags.DEFINE_integer(name = 'batch_size', default = 100, help = 'The batch size to use for training.')
+flags.DEFINE_integer(name = 'max_epochs', default = 500, help = 'The maximum amount of epochs.')
 
 FLAGS(sys.argv)
 
 
 def train(model, train_data, train_labels, validation_data, validation_labels, batch_size, max_epochs):
+    es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='min')
     history = model.fit(
         train_data, 
         train_labels, 
         validation_data=(validation_data, validation_labels),
         epochs=max_epochs,
         batch_size=batch_size,
-        verbose = 0
+        verbose = 0,
+        callbacks=[es]
     )
 
     return model, history
@@ -140,11 +142,13 @@ def main(argv):
     dropout_list = [True, False]
 
 
-    settings_seed = 'Seed: ' + FLAGS.seed
+    settings_seed = 'Seed: ' + str(FLAGS.seed)
+    settings_batch_size = 'Batch size: ' + str(FLAGS.batch_size)
+    settings_max_epochs = 'Max epochs: ' + str(FLAGS.max_epochs)
     settings_hidden_layers = '# hidden layers: ' + str(model_hidden_layers_list)
     settings_neurons = '# neurons in hidden layers: ' + str(hidden_layer_neurons_list)
     settings_dropout = 'Dropout: ' + str(dropout_list)
-    settings = settings_seed + '\n' + settings_hidden_layers + '\n' + settings_neurons + '\n' + settings_dropout
+    settings = settings_seed + '\n' + settings_batch_size + '\n' + settings_max_epochs + '\n' + settings_hidden_layers + '\n' + settings_neurons + '\n' + settings_dropout
     
     with open(FLAGS.settings_file, 'w+') as f:
         f.write(settings)
@@ -156,6 +160,8 @@ def main(argv):
     print(settings_neurons)
     print(settings_dropout)
     print(settings_seed)
+    print(settings_batch_size)
+    print(settings_max_epochs)
     print('-------------------------------------------------------------------------------------')
 
     try:
@@ -206,18 +212,14 @@ def main(argv):
                         verbose=0
                     )
 
-                    print('=========================================================================')
-                    print('Finished training model.')
-                    print('=========================================================================')
-
-                    print('Model scores:')
+                    print('Final model scores:')
 
                     for index in range(len(model.metrics_names)):
                         print('%s: %.2f%%' % (model.metrics_names[index], scores[index]*100))
 
                     os.mkdir(model_dir)
 
-                    name = FLAGS.model_name
+                    name = FLAGS.model_name + 'h5'
                     path = os.path.join(cwd, model_dir, name)
                     model.save(path)
 
@@ -256,6 +258,7 @@ def main(argv):
                     name = 'top_1.png'
                     path = os.path.join(cwd, model_dir, name)
                     plt.savefig(path)
+                    plt.close()
 
                     # Plot training & validation top-3 accuracy values
                     plt.figure()
@@ -268,6 +271,7 @@ def main(argv):
                     name = 'top_3.png'
                     path = os.path.join(cwd, model_dir, name)
                     plt.savefig(path)
+                    plt.close()
 
                     # Plot training & validation loss values
                     plt.figure()
@@ -280,10 +284,10 @@ def main(argv):
                     name = 'loss.png'
                     path = os.path.join(cwd, model_dir, name)
                     plt.savefig(path)
-
+                    plt.close()
 
                     print('=========================================================================')
-                    print('Finished training model with l=' + str(model_hidden_layers) + ' n=' + str(hidden_layer_neurons) + ' d=' + str(dropout))
+                    print('Finished with model with l=' + str(model_hidden_layers) + ' n=' + str(hidden_layer_neurons) + ' d=' + str(dropout))
                     print('=========================================================================')
     except KeyboardInterrupt:
         return
