@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import metrics, optimizers, layers, losses, models, callbacks
+from tensorflow.keras import metrics, optimizers, layers, losses, models, callbacks, utils
 from tensorflow.keras import backend as K
 
 
@@ -56,7 +56,6 @@ def load_data(data_path, train, validation, test, seed = None):
         if os.path.isfile(_data_path) and data.lower().endswith('.npy'):
             data_paths.append(_data_path)
 
-
     data_and_labels = []
     for path in data_paths:
         for data_point in np.load(path):
@@ -69,11 +68,12 @@ def load_data(data_path, train, validation, test, seed = None):
 
     data = []
     labels = []
-    for data_point in data_and_labels:
-        data.append(data_point[:-54])
-        labels.append(data_point[-54:])
+    for data_point in data_and_labels[:len(data_and_labels)]:
+        if len(data_point) == 248:
+            data.append(data_point[:-54])
+            labels.append(data_point[-54:])
 
-    data = keras.utils.normalize(data, axis=-1, order=2)
+    data = utils.normalize(np.array(data), axis=-1, order=2)
 
     train_end = int(len(data) * train)
     validation_end = int(len(data) * (train + validation))
@@ -115,6 +115,107 @@ def load_data(data_path, train, validation, test, seed = None):
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 
+def load_data_2(data_path, train, validation, test, seed = None):
+    # Make list of the paths to all the replays
+    cwd = os.getcwd()
+    data_paths = []
+    data_base_path = os.path.join(cwd, data_path)
+    for data in os.listdir(data_path):
+        _data_path = os.path.join(data_base_path, data)
+        if os.path.isfile(_data_path) and data.lower().endswith('.npy'):
+            data_paths.append(_data_path)
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    np.random.shuffle(data_paths)
+
+    train_end = int(len(data_paths) * train)
+    validation_end = int(len(data_paths) * (train + validation))
+
+    train_paths = []
+    for index in range(train_end):
+        train_paths.append(data_paths[index])
+    
+    validation_paths = []
+    for index in range(train_end, validation_end):
+        validation_paths.append(data_paths[index])
+
+    test_paths = []
+    for index in range(validation_end, len(data_paths)):
+        test_paths.append(data_paths[index])
+
+    train_end = int(len(data) * train)
+    validation_end = int(len(data) * (train + validation))
+
+    train_data = []
+    for path in train_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248:
+                train_data.append(0)
+
+    validation_data = []
+    for path in validation_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248:
+                validation_data.append(0)
+
+    test_data = []
+    for path in test_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248:
+                test_data.append(0)
+    
+    data = []
+    labels = []
+    for path in data_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248:
+                data.append(data_point[:-54])
+                labels.append(data_point[-54:])
+
+    data = utils.normalize(data, axis=-1, order=2)
+    
+    train_end = len(test_data)
+    validation_end = len(test_data) + len(validation_data)
+
+    train_data = []
+    train_labels = []
+    for index in range(train_end):
+            train_data.append(data[index])
+            train_labels.append(labels[index])
+
+    validation_data = []
+    validation_labels = []
+    for index in range(train_end, validation_end):
+            validation_data.append(data[index])
+            validation_labels.append(labels[index])
+
+    test_data = []
+    test_labels = []
+    for index in range(validation_end, len(data)):
+            test_data.append(data[index])
+            test_labels.append(labels[index])
+
+    print('_____________________________________________________________________________________')
+    print('Data meta data')
+    print('{:20s} {:7d}'.format('# of games', len(data_paths)))
+    print('{:20s} {:7d}'.format('# of data points', len(data)))
+    print('Split seed: ' + str(seed))
+    print('-------------------------------------------------------------------------------------')
+    print('| {:25s} | {:25s} | {:25s} |'.format('Data', '# data points', '# data point dimensions'))
+    print('|---------------------------|---------------------------|---------------------------|')
+    print('| {:25s} | {:25d} | {:25d} |'.format('train_data shape', len(train_data), len(train_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('train_labels shape', len(train_labels), len(train_labels[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('validation_data shape', len(validation_data), len(validation_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('validation_labels shape', len(validation_labels), len(validation_labels[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('test_data shape', len(test_data), len(test_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('test_labels shape', len(test_labels), len(test_labels[0])))
+    print('-------------------------------------------------------------------------------------')
+
+    return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
+
+
 def top_3_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
 
@@ -127,7 +228,7 @@ def main(argv):
     cwd = os.getcwd()
     
     print('Loading data...')
-    train_data, train_labels, validation_data, validation_labels, test_data, test_labels = load_data(FLAGS.data_path, 0.7, 0.2, 0.1, FLAGS.seed)
+    train_data, train_labels, validation_data, validation_labels, test_data, test_labels = load_data_2(FLAGS.data_path, 0.7, 0.15, 0.15, FLAGS.seed)
     print('Data loaded.')
 
     input_size = train_data.shape[1]

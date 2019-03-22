@@ -25,7 +25,7 @@ flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'T
 flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
-flags.DEFINE_integer(name = 'start_from_replay', default = 40, help = 'The replay number to start from.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 1400, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)
@@ -147,7 +147,7 @@ def extract_actions(counter, replays_path, save_path, batch_size, step_mul):
                                             new_data_point += friendly_unit_list    # 44
                                             new_data_point += enemy_unit_list       # 44
                                             new_data_point += mapped_action         # 54
-
+                                            
                                             player_game_data_points.append(new_data_point)
 
                                         resources = get_resources(obs.observation)
