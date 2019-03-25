@@ -320,7 +320,7 @@ def main(argv):
 
                     os.mkdir(model_dir)
 
-                    name = FLAGS.model_name + 'h5'
+                    name = FLAGS.model_name + '.h5'
                     path = os.path.join(cwd, model_dir, name)
                     model.save(path)
 

@@ -25,7 +25,7 @@ flags.DEFINE_string(name = 'save_path', default = 'extracted_actions', help = 'T
 flags.DEFINE_integer(name = 'n_instance', default = 4, help = 'The default amount of threads to use to filter the replays.')
 flags.DEFINE_integer(name = 'batch_size', default = 10, help = 'The amount of replays each worker process takes at a time.')
 flags.DEFINE_integer(name = 'step_mul', default = 1, help = 'The amount of game steps between each observation.')
-flags.DEFINE_integer(name = 'start_from_replay', default = 1400, help = 'The replay number to start from.')
+flags.DEFINE_integer(name = 'start_from_replay', default = 5770, help = 'The replay number to start from.')
 
 
 FLAGS(sys.argv)
@@ -192,7 +192,7 @@ def in_progress_dic(in_progress):
     return in_progress_dic
 
 
-def units_dic(units):
+def buildings_dic(units):
     units_dic = {}
     for i in range(16):
         amount = units[i]
@@ -201,7 +201,7 @@ def units_dic(units):
             units_dic[unit_name] = amount
     return units_dic
 
-def buildings_dic(units):
+def units_dic(units):
     buidlings_dic = {}
     for i in range(16, len(units)):
         amount = units[i]
