@@ -221,6 +221,7 @@ if __name__ == "__main__":
     correct_classifications = 0
 
     for i in range(len(test_predictions)):
+        print(test_predictions[i])
         prediction = np.amax(test_predictions[i])
         prediction_action = c.protoss_macro_actions[np.argmax(test_predictions[i])]
 
