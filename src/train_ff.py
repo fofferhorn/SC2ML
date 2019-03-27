@@ -10,6 +10,7 @@ from tensorflow.keras import backend as K
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import math
 
 import os
 
@@ -23,6 +24,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string(name = 'data_path', default = 'extracted_actions', help = 'The path to the training data.')
 flags.DEFINE_string(name = 'model_name', default = 'model', help = 'The name to save the model with.')
+flags.DEFINE_string(name = 'maxes_path', default = None, help = 'The name of the files that contains the max values to be used for min-max normalization.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
 flags.DEFINE_integer(name = 'batch_size', default = 100, help = 'The batch size to use for training.')
 flags.DEFINE_integer(name = 'max_epochs', default = 500, help = 'The maximum amount of epochs.')
@@ -31,7 +33,7 @@ FLAGS(sys.argv)
 
 
 def train(model, train_data, train_labels, validation_data, validation_labels, batch_size, max_epochs):
-    es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='min')
+    es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=1, mode='min')
     history = model.fit(
         train_data, 
         train_labels, 
@@ -45,7 +47,7 @@ def train(model, train_data, train_labels, validation_data, validation_labels, b
     return model, history
 
 
-def load_data(data_path, train, validation, test, seed = None):
+def load_data(data_path, train, validation, test, seed = None, maxes_path = None):
     # Make list of the paths to all the replays
     cwd = os.getcwd()
     data_paths = []
@@ -72,7 +74,9 @@ def load_data(data_path, train, validation, test, seed = None):
             data.append(data_point[:-54])
             labels.append(data_point[-54:])
 
-    data = utils.normalize(np.array(data), axis=-1, order=2)
+    print('Normalizing data...')
+    data = min_max_norm(data, maxes_path)
+    print('Data normalized.')
 
     train_end = int(len(data) * train)
     validation_end = int(len(data) * (train + validation))
@@ -114,7 +118,7 @@ def load_data(data_path, train, validation, test, seed = None):
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 
-def load_data_2(data_path, train, validation, test, seed = None):
+def load_data_2(data_path, train, validation, test, seed = None, maxes_path = None):
     # Make list of the paths to all the replays
     cwd = os.getcwd()
     data_paths = []
@@ -173,7 +177,9 @@ def load_data_2(data_path, train, validation, test, seed = None):
                 data.append(data_point[:-54])
                 labels.append(data_point[-54:])
 
-    data = utils.normalize(data, axis=-1, order=2)
+    print('Normalizing data...')
+    data = min_max_norm(data, maxes_path)
+    print('Data normalized.')
     
     train_end = len(test_data)
     validation_end = len(test_data) + len(validation_data)
@@ -215,6 +221,38 @@ def load_data_2(data_path, train, validation, test, seed = None):
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 
+def min_max_norm(data, maxes_path = None):
+    if maxes_path is None:
+        maxes = []
+        for i in range(len(data[0])):
+            max = 0
+            for j in range(len(data)):
+                if data[j][i] > max:
+                    max = data[j][i]
+            maxes.append(max)
+
+        np.array(maxes)
+        np.savetxt('maxes.txt', maxes)
+    else:
+        maxes = np.loadtxt(maxes_path)
+
+    norm_data = []
+    for i in range(len(data)):
+        norm_data_point = []
+        for j in range(len(data[i])):
+            if maxes[j] == 0:
+                norm_data_point.append(0)
+            else:
+                norm_value = data[i][j]/maxes[j]
+                if math.isnan(norm_value):
+                    norm_data_point.append(0)
+                else:
+                    norm_data_point.append(norm_value)
+        norm_data.append(norm_data_point)
+
+    return norm_data
+    
+
 def top_3_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
 
@@ -225,7 +263,7 @@ def top_1_categorical_accuracy(y_true, y_pred):
 
 def main(argv):
     print('Loading data...')
-    train_data, train_labels, validation_data, validation_labels, test_data, test_labels = load_data_2(FLAGS.data_path, 0.7, 0.2, 0.1, FLAGS.seed)
+    train_data, train_labels, validation_data, validation_labels, test_data, test_labels = load_data_2(FLAGS.data_path, 0.7, 0.2, 0.1, FLAGS.seed, FLAGS.maxes_path)
     print('Data loaded.')
 
     input_size = train_data.shape[1]

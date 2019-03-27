@@ -1,7 +1,3 @@
-protoss_in_progress_to_index_mapper = {
-
-}
-
 # Mapping of unit_id to index in list.
 protoss_unit_mapper = {
     # Buildings
