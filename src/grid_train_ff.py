@@ -1,4 +1,11 @@
+#!/usr/bin/env python3
+
 from __future__ import absolute_import, division, print_function
+
+from absl import app
+from absl import flags
+import sys
+import os
 
 # TensorFlow and tf.keras
 import tensorflow as tf
@@ -13,12 +20,7 @@ import matplotlib.pyplot as plt
 import random
 import math
 
-import os
-
-from absl import app
-from absl import flags
-import sys
-
+# Local stuff
 import utils
 
 
