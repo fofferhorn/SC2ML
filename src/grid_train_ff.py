@@ -52,16 +52,7 @@ def train(model, train_data, train_labels, validation_data, validation_labels, b
     return model, history
 
 
-def top_3_categorical_accuracy(y_true, y_pred):
-    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
-
-
-def top_1_categorical_accuracy(y_true, y_pred):
-    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=1)
-
-
 def main(argv):
-    print('Loading data...')
     train_data, train_labels, validation_data, validation_labels, test_data, test_labels = \
         utils.load_data_without_game_crossover(
             FLAGS.data_path, 
@@ -72,7 +63,6 @@ def main(argv):
             FLAGS.maxes_path, 
             FLAGS.normalized_data_path
         )
-    print('Data loaded.')
 
     input_size = train_data.shape[1]
     num_classes = train_labels.shape[1]
@@ -130,11 +120,33 @@ def main(argv):
             dropout = random.choice(dropout_list)
             regularization = random.choice(regularization_list)
 
+            if dropout:
+                dropout_variable = random.uniform(0.0, 0.1)
+
+            if regularization:
+                regularization_variable = random.uniform(0.0, 0.1)
+
             model_dir = 'l' + str(hidden_layers) + ' _n' + str(neurons) + ' _d' + str(dropout) + ' _r' + str(regularization)
             os.mkdir(model_dir)
 
+            network_settings = \
+                '# hidden layers: ' + str(hidden_layers) + '\n' + \
+                '# neurons in hidden layers: ' + str(neurons) + '\n' + \
+                (('Dropout: ' + str(dropout_variable)) if dropout else ('Dropout: ' + str(dropout))) + '\n' + \
+                (('Regularization: ' + str(regularization_variable)) if regularization else ('Regularization: ' + str(regularization))) + '\n' + \
+                '\n'
+
+            model_results_file = os.path.join(model_dir, 'results.txt')
+
+            with open(model_results_file, 'w+') as f:
+                f.write(network_settings)
+
             print('=========================================================================')
-            print('Training model with l=' + str(hidden_layers) + ' n=' + str(neurons) + ' d=' + str(dropout) + ' r=' + str(regularization) + '...')
+            print('Training model with')
+            print('# hidden layers: ' + str(hidden_layers))
+            print('# neurons: ' + str(neurons))
+            print(('Dropout: ' + str(dropout_variable)) if dropout else ('Dropout: ' + str(dropout)))
+            print((('Regularization: ' + str(regularization_variable)) if regularization else ('Regularization: ' + str(regularization))))
             print('=========================================================================')
             
             model = keras.models.Sequential()
@@ -143,15 +155,15 @@ def main(argv):
 
             for _ in range(hidden_layers):
                 if dropout:
-                    model.add(layers.Dropout(0.2))
+                    model.add(layers.Dropout(dropout_variable))
                 
                 if regularization:
-                    model.add(layers.Dense(neurons, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(0.01)))
+                    model.add(layers.Dense(neurons, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(regularization_variable)))
                 else:
                     model.add(layers.Dense(neurons, activation=tf.nn.relu))
 
             if dropout:
-                model.add(layers.Dropout(0.2))
+                model.add(layers.Dropout(dropout_variable))
 
             model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
 
@@ -159,7 +171,7 @@ def main(argv):
 
             model.compile(loss=losses.categorical_crossentropy,
                         optimizer=optimizers.Adam(),
-                        metrics=[top_1_categorical_accuracy, top_3_categorical_accuracy])
+                        metrics=[utils.top_1_categorical_accuracy, utils.top_3_categorical_accuracy])
 
             best_model_path = os.path.join(model_dir, 'best_model.h5')
 
@@ -190,9 +202,7 @@ def main(argv):
                 results += '\n'
                 print('%s: %.2f%%' % (model.metrics_names[index], scores[index]*100))
 
-            model_results_file = os.path.join(model_dir, 'results.txt')
-
-            with open(model_results_file, 'w+') as f:
+            with open(model_results_file, 'a') as f:
                 f.write(results)
 
             name = 'model.h5'
@@ -263,7 +273,7 @@ def main(argv):
             plt.close()
 
             print('=========================================================================')
-            print('Finished with model with l=' + str(hidden_layers) + ' n=' + str(neurons) + ' d=' + str(dropout) + ' r=' + str(regularization))
+            print('Finished with model')
             print('=========================================================================')
     except KeyboardInterrupt:
         return

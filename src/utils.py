@@ -2,7 +2,11 @@ import numpy as np
 import os
 import math
 
+from tensorflow.keras.utils import normalize
+from tensorflow.keras import metrics
+
 def load_data_with_game_crossover(data_path, train, validation, test, seed = None, maxes_path = None, normalized_data_path = None):
+    print('Loading data...')
     # Make list of the paths to all the replays
     cwd = os.getcwd()
     data_paths = []
@@ -28,6 +32,7 @@ def load_data_with_game_crossover(data_path, train, validation, test, seed = Non
         if len(data_point) == 248:
             data.append(data_point[:-54])
             labels.append(data_point[-54:])
+    print('Data loaded.')
 
     print('Normalizing data...')
     if normalized_data_path is not None:
@@ -36,6 +41,7 @@ def load_data_with_game_crossover(data_path, train, validation, test, seed = Non
         min_max_norm(data, maxes_path)
     print('Data normalized.')
 
+    print('Splitting data...')
     train_end = int(len(data) * train)
     validation_end = int(len(data) * (train + validation))
 
@@ -56,6 +62,7 @@ def load_data_with_game_crossover(data_path, train, validation, test, seed = Non
     for index in range(validation_end, len(data)):
             test_data.append(data[index])
             test_labels.append(labels[index])
+    print('Data split.')
 
     print('_____________________________________________________________________________________')
     print('Data meta data')
@@ -76,6 +83,7 @@ def load_data_with_game_crossover(data_path, train, validation, test, seed = Non
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 def load_data_without_game_crossover(data_path, train, validation, test, seed = None, maxes_path = None, normalized_data_path = None):
+    print('Loading data...')
     # Make list of the paths to all the replays
     cwd = os.getcwd()
     data_paths = []
@@ -101,10 +109,6 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
     for index in range(train_end, validation_end):
         validation_paths.append(data_paths[index])
 
-    test_paths = []
-    for index in range(validation_end, len(data_paths)):
-        test_paths.append(data_paths[index])
-
     amount_train_data_points = 0
     for path in train_paths:
         for data_point in np.load(path):
@@ -116,12 +120,6 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
         for data_point in np.load(path):
             if len(data_point) == 248:
                 amount_validation_data_points += 1
-
-    amount_test_data_points = 0
-    for path in test_paths:
-        for data_point in np.load(path):
-            if len(data_point) == 248:
-                amount_test_data_points += 1
     
     data = []
     labels = []
@@ -130,14 +128,21 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
             if len(data_point) == 248:
                 data.append(data_point[:-54])
                 labels.append(data_point[-54:])
+    print('Data loaded.')
 
-    print('Normalizing data...')
     if normalized_data_path is not None:
+        print('Loading normalized data')
         data = np.load(normalized_data_path)
+        print('Loaded normalized data')
     else:
-        min_max_norm(data, maxes_path)
-    print('Data normalized.')
+        print('Performing L2 normalization...')
+        data = normalize(data, axis=-1, order=2)
+        print('L2 normalization done.')
+        # print('Performing min-max normalization...')
+        # min_max_norm(data, maxes_path)
+        # print('Min-max normalization done.')
     
+    print('Splitting data...')
     train_end = amount_train_data_points
     validation_end = amount_train_data_points + amount_validation_data_points
 
@@ -158,6 +163,7 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
     for index in range(validation_end, len(data)):
             test_data.append(data[index])
             test_labels.append(labels[index])
+    print('Data split.')
 
     print('_____________________________________________________________________________________')
     print('Data meta data')
@@ -180,6 +186,7 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
 
 def min_max_norm(data, maxes_path = None):
     if maxes_path is None:
+        print('Finding maxes for normalizaiton...')
         maxes = []
         for i in range(len(data[0])):
             max = 0.0
@@ -190,9 +197,13 @@ def min_max_norm(data, maxes_path = None):
 
         np.array(maxes)
         np.savetxt('maxes.txt', maxes)
+        print('Maxes found for normalization.')
     else:
+        print('Loading maxes for normalization...')
         maxes = np.loadtxt(maxes_path)
+        print('Maxes loaded for normalization.')
 
+    print('Normalizing data...')
     norm_data = []
     for i in range(len(data)):
         norm_point = []
@@ -208,8 +219,17 @@ def min_max_norm(data, maxes_path = None):
         norm_data.append(norm_point)
 
     np.save('normalized_data.npy', norm_data)
+    print('Normalized data.')
 
     return norm_data
+
+
+def top_3_categorical_accuracy(y_true, y_pred):
+    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
+
+
+def top_1_categorical_accuracy(y_true, y_pred):
+    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=1)
 
 
 if __name__ == "__main__":

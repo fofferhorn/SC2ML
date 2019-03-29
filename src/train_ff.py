@@ -28,7 +28,7 @@ flags.DEFINE_string(name = 'maxes_path', default = None, help = 'The name of the
 flags.DEFINE_string(name = 'normalized_data_path', default = None, help = 'The path to the normalized data.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
 flags.DEFINE_integer(name = 'batch_size', default = 100, help = 'The batch size to use for training.')
-flags.DEFINE_integer(name = 'max_epochs', default = 500, help = 'The maximum amount of epochs.')
+flags.DEFINE_integer(name = 'max_epochs', default = 100, help = 'The maximum amount of epochs.')
 
 FLAGS(sys.argv)
 
@@ -48,27 +48,20 @@ def train(model, train_data, train_labels, validation_data, validation_labels, b
     return model, history
 
 
-def top_3_categorical_accuracy(y_true, y_pred):
-    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=3)
-
-
-def top_1_categorical_accuracy(y_true, y_pred):
-    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=1)
-
-
 def main(argv):
-    print('Loading data...')
     train_data, train_labels, validation_data, validation_labels, test_data, test_labels = \
         utils.load_data_without_game_crossover(
             FLAGS.data_path, 
             0.7, 
-            0.2, 
-            0.1, 
+            0.15, 
+            0.15, 
             FLAGS.seed, 
             FLAGS.maxes_path, 
             FLAGS.normalized_data_path
         )
-    print('Data loaded.')
+
+    for i in range(3):
+        print(train_data[i])
 
     input_size = train_data.shape[1]
     num_classes = train_labels.shape[1]
@@ -77,16 +70,16 @@ def main(argv):
         random.seed(FLAGS.seed)
 
     model = models.Sequential()
-    model.add(layers.Dense(500, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(0.01), input_shape=(input_size,)))
-    model.add(layers.Dense(500, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(0.01)))
-    model.add(layers.Dense(500, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(0.01)))
+    model.add(layers.Dense(500, activation=tf.nn.relu, input_shape=(input_size,)))
+    model.add(layers.Dense(500, activation=tf.nn.relu))
+    model.add(layers.Dense(500, activation=tf.nn.relu))
     model.add(layers.Dense(num_classes, activation=tf.nn.softmax))
 
     model.summary()
 
     model.compile(loss=losses.categorical_crossentropy,
                 optimizer=optimizers.Adam(),
-                metrics=[top_1_categorical_accuracy, top_3_categorical_accuracy])
+                metrics=[utils.top_1_categorical_accuracy, utils.top_3_categorical_accuracy])
     
     print('=========================================================================')
     print('Training model...')
