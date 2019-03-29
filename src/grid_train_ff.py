@@ -1,14 +1,5 @@
 from __future__ import absolute_import, division, print_function
-import sys
-import os
 
-print(sys.executable)
-print(sys.version)
-print(sys.version_info)
-print(sys.path)
-
-from absl import app
-from absl import flags
 
 # TensorFlow and tf.keras
 import tensorflow as tf
@@ -16,6 +7,10 @@ from tensorflow import keras
 from tensorflow.keras import metrics, optimizers, layers, losses, models, callbacks, utils, regularizers
 from tensorflow.keras import backend as K
 
+from absl import app
+from absl import flags
+import sys
+import os
 
 # Helper libraries
 import numpy as np

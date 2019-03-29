@@ -8,13 +8,11 @@ from tensorflow.keras import metrics
 def load_data_with_game_crossover(data_path, train, validation, test, seed = None, maxes_path = None, normalized_data_path = None):
     print('Loading data...')
     # Make list of the paths to all the replays
-    cwd = os.getcwd()
     data_paths = []
-    data_base_path = os.path.join(cwd, data_path)
-    for data in os.listdir(data_path):
-        _data_path = os.path.join(data_base_path, data)
-        if os.path.isfile(_data_path) and data.lower().endswith('.npy'):
-            data_paths.append(_data_path)
+    for file in os.listdir(data_path):
+        file_path = os.path.join(data_path, file)
+        if os.path.isfile(file_path) and file.lower().endswith('.npy'):
+            data_paths.append(file_path)
 
     data_and_labels = []
     for path in data_paths:
@@ -85,13 +83,12 @@ def load_data_with_game_crossover(data_path, train, validation, test, seed = Non
 def load_data_without_game_crossover(data_path, train, validation, test, seed = None, maxes_path = None, normalized_data_path = None):
     print('Loading data...')
     # Make list of the paths to all the replays
-    cwd = os.getcwd()
     data_paths = []
-    data_base_path = os.path.join(cwd, data_path)
-    for data in os.listdir(data_path):
-        _data_path = os.path.join(data_base_path, data)
-        if os.path.isfile(_data_path) and data.lower().endswith('.npy'):
-            data_paths.append(_data_path)
+    print(len(os.listdir(data_path)))
+    for file in os.listdir(data_path):
+        file_path = os.path.join(data_path, file)
+        if os.path.isfile(file_path) and file.lower().endswith('.npy'):
+            data_paths.append(file_path)
 
     if seed is not None:
         np.random.seed(seed)
@@ -161,8 +158,8 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
     test_data = []
     test_labels = []
     for index in range(validation_end, len(data)):
-            test_data.append(data[index])
-            test_labels.append(labels[index])
+        test_data.append(data[index])
+        test_labels.append(labels[index])
     print('Data split.')
 
     print('_____________________________________________________________________________________')
