@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 from __future__ import absolute_import, division, print_function
-
-from absl import app
-from absl import flags
 import sys
 import os
 
 print(sys.executable)
 print(sys.path)
+
+from absl import app
+from absl import flags
 
 # TensorFlow and tf.keras
 import tensorflow as tf
