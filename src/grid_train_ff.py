@@ -7,6 +7,9 @@ from absl import flags
 import sys
 import os
 
+print(sys.executable)
+print(sys.path)
+
 # TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
