@@ -91,8 +91,8 @@ def test_network(test_data, test_labels):
 
 
 def test_network_intervals(intervals, seed):
-    with open('intervals.txt', 'w+') as f:
-        f.write('')
+    with open('intervals.csv', 'w+') as f:
+        f.write('interval_start;interval_end;data_amount;loss;top_1_accuracy;top_3_accuracy\n')
 
     model = models.load_model(FLAGS.model_name, {"top_1_categorical_accuracy": utils.top_1_categorical_accuracy, "top_3_categorical_accuracy": utils.top_3_categorical_accuracy})
     
@@ -112,10 +112,13 @@ def test_network_intervals(intervals, seed):
 
         scores = model.evaluate(interval_data, interval_labels, verbose=0)
 
-        results = '----------------------------------\nrange: [' + str(prev) + '; ' + str(interval_end) + '[\n'
+        results = str(prev)
+        results += ';' + str(interval_end)
+        results += ';' + str(len(interval_data))
         for index in range(len(model.metrics_names)):
-            results += '%s: %.2f%%' % (model.metrics_names[index], scores[index]*100)
-            results += '\n'
+            results += ';%.2f' % (scores[index]*100)
+
+        results += '\n'
 
         print(results)
 
