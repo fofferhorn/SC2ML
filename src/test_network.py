@@ -108,9 +108,9 @@ if __name__ == "__main__":
             0.7, 
             0.15, 
             0.15, 
-            FLAGS.maxes_path,
             FLAGS.start_time,
             FLAGS.end_time,
+            FLAGS.maxes_path,
             FLAGS.seed
         )
 
