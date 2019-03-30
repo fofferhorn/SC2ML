@@ -226,6 +226,9 @@ def load_data_part_of_game(data_path, train, validation, test, time_start, time_
                 labels.append(data_point[-54:])
     print('Data loaded.')
 
+    if len(data) == 0:
+        return np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]), 
+
     print('Performing L2 normalization...')
     data = normalize(data, axis=-1, order=2)
     print('L2 normalization done.')

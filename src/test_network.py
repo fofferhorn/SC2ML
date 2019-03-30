@@ -90,33 +90,47 @@ def test_network(test_data, test_labels):
     print()
 
 
-def test_network_intervals(intervals, seed):
+def test_network_intervals(intervals, seed, maxes_path = None, normalized_data_path = None):
     with open('intervals.csv', 'w+') as f:
         f.write('interval_start;interval_end;data_amount;loss;top_1_accuracy;top_3_accuracy\n')
 
     model = models.load_model(FLAGS.model_name, {"top_1_categorical_accuracy": utils.top_1_categorical_accuracy, "top_3_categorical_accuracy": utils.top_3_categorical_accuracy})
     
+    _, _, _, _, test_data, test_labels = \
+        utils.load_data_without_game_crossover(
+            FLAGS.data_path, 
+            0.7, 
+            0.15, 
+            0.15, 
+            seed,
+            maxes_path,
+            normalized_data_path
+        ) 
+
     prev = 0
 
     for interval_end in intervals:
-        _, _, _, _, interval_data, interval_labels = \
-            utils.load_data_part_of_game(
-                FLAGS.data_path, 
-                0.7, 
-                0.15, 
-                0.15, 
-                prev,
-                interval_end,
-                seed
-            )
 
-        scores = model.evaluate(interval_data, interval_labels, verbose=0)
+        interval_data = []
+        interval_labels = []
+        for i in range(len(test_data)):
+            if prev <= test_data[i][0] < interval_end:
+                interval_data.append(test_data[i])
+                interval_labels.append(test_labels[i])
 
-        results = str(prev)
-        results += ';' + str(interval_end)
-        results += ';' + str(len(interval_data))
-        for index in range(len(model.metrics_names)):
-            results += ';%.2f' % (scores[index]*100)
+        if len(interval_data) == 0:
+            results = str(prev)
+            results += ';' + str(interval_end)
+            results += ';' + str(len(interval_data))
+            results += ';;'
+        else:
+            scores = model.evaluate(interval_data, interval_labels, verbose=0)
+
+            results = str(prev)
+            results += ';' + str(interval_end)
+            results += ';' + str(len(interval_data))
+            for index in range(len(model.metrics_names)):
+                results += ';%.2f' % (scores[index]*100)
 
         results += '\n'
 
