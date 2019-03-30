@@ -24,6 +24,8 @@ flags.DEFINE_string(name = 'model_name', default = 'model.h5', help = 'The name 
 flags.DEFINE_string(name = 'maxes_path', default = None, help = 'The name of the files that contains the max values to be used for min-max normalization.')
 flags.DEFINE_string(name = 'normalized_data_path', default = None, help = 'The path to the normalized data.')
 flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to split the data.')
+flags.DEFINE_integer(name = 'start_time', default = 0, help = 'The seed used to split the data.')
+flags.DEFINE_integer(name = 'end_time', default = 9408, help = 'The seed used to split the data.')
 
 FLAGS(sys.argv)
     
@@ -107,8 +109,8 @@ if __name__ == "__main__":
             0.15, 
             0.15, 
             FLAGS.maxes_path,
-            0,
-            9408,
+            FLAGS.start_time,
+            FLAGS.end_time,
             FLAGS.seed
         )
 

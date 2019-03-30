@@ -180,7 +180,7 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
     return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
 
 
-def load_data_part_of_game(data_path, train, validation, test, maxes_path, time_start, time_end, seed = None, ):
+def load_data_part_of_game(data_path, train, validation, test, time_start, time_end, maxes_path = None, seed = None, ):
     print('Loading data...')
     # Make list of the paths to all the replays
     data_paths = []
