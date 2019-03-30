@@ -151,7 +151,7 @@ def test_network_intervals(intervals, seed, data_path):
 
         print(results)
 
-        with open('intervals.txt', 'a') as f:
+        with open('intervals.csv', 'a') as f:
             f.write(results)
 
         prev = interval_end
