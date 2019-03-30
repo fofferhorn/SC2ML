@@ -126,7 +126,7 @@ def main(argv):
             if regularization:
                 regularization_variable = random.uniform(0.0, 0.1)
 
-            model_dir = 'l' + str(hidden_layers) + ' _n' + str(neurons) + ' _d' + str(dropout) + ' _r' + str(regularization)
+            model_dir = 'l' + str(hidden_layers) + '_n' + str(neurons) + '_d' + str(dropout) + '_r' + str(regularization)
             os.mkdir(model_dir)
 
             network_settings = \

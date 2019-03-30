@@ -28,24 +28,8 @@ flags.DEFINE_integer(name = 'seed', default = None, help = 'The seed used to spl
 FLAGS(sys.argv)
     
 
-if __name__ == "__main__":
-    train_data, train_labels, _, _, _, _ = \
-        utils.load_data_without_game_crossover(
-            FLAGS.data_path, 
-            0.99, 
-            0.005, 
-            0.005, 
-            FLAGS.seed,
-            FLAGS.maxes_path,
-            FLAGS.normalized_data_path
-        )
-
+def test_network(test_data, test_labels):
     model = models.load_model(FLAGS.model_name, {"top_1_categorical_accuracy": utils.top_1_categorical_accuracy, "top_3_categorical_accuracy": utils.top_3_categorical_accuracy})
-
-    test_size = len(train_data)
-
-    test_data = train_data[:test_size]
-    test_labels = train_labels[:test_size]
 
     test_predictions = model.predict(test_data, verbose = 0)
     
@@ -79,7 +63,7 @@ if __name__ == "__main__":
             if np.argmax(test_labels[j]) == i:
                 actual += 1
         
-        percentage_actual = actual/test_size*100
+        percentage_actual = actual/len(test_data)*100
 
         predicted = 0
         correctly_predicted = 0
@@ -90,7 +74,7 @@ if __name__ == "__main__":
                 if np.argmax(test_labels[j]) == i:
                     correctly_predicted += 1
 
-        percentage_predicted = predicted/test_size*100
+        percentage_predicted = predicted/len(test_data)*100
         if predicted == 0:
             percentage_correctly_predicted = 0
         else:
@@ -100,7 +84,32 @@ if __name__ == "__main__":
     print('----------------------------------------------------------------------------------------------------------------------------------------------------------------')
 
     print()
-    print('Correct classifications: {:d} out of {:d} possible resulting in a top-1 accuracy of {:.2f}%'.format(correct_classifications, test_size, correct_classifications/test_size*100))
+    print('Correct classifications: {:d} out of {:d} possible resulting in a top-1 accuracy of {:.2f}%'.format(correct_classifications, len(test_data), correct_classifications/len(test_data)*100))
     print()
-    
-    
+
+
+if __name__ == "__main__":
+        # _, _, _, _, test_data, test_labels = \
+    #     utils.load_data_without_game_crossover(
+    #         FLAGS.data_path, 
+    #         0.7, 
+    #         0.15, 
+    #         0.15, 
+    #         FLAGS.seed,
+    #         FLAGS.maxes_path,
+    #         FLAGS.normalized_data_path
+    #     )
+
+    _, _, _, _, test_data, test_labels = \
+        utils.load_data_part_of_game(
+            FLAGS.data_path, 
+            0.7, 
+            0.15, 
+            0.15, 
+            FLAGS.maxes_path,
+            0,
+            9408,
+            FLAGS.seed
+        )
+
+    test_network(test_data, test_labels)

@@ -84,7 +84,6 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
     print('Loading data...')
     # Make list of the paths to all the replays
     data_paths = []
-    print(len(os.listdir(data_path)))
     for file in os.listdir(data_path):
         file_path = os.path.join(data_path, file)
         if os.path.isfile(file_path) and file.lower().endswith('.npy'):
@@ -138,6 +137,101 @@ def load_data_without_game_crossover(data_path, train, validation, test, seed = 
         # print('Performing min-max normalization...')
         # min_max_norm(data, maxes_path)
         # print('Min-max normalization done.')
+    
+    print('Splitting data...')
+    train_end = amount_train_data_points
+    validation_end = amount_train_data_points + amount_validation_data_points
+
+    train_data = []
+    train_labels = []
+    for index in range(train_end):
+            train_data.append(data[index])
+            train_labels.append(labels[index])
+
+    validation_data = []
+    validation_labels = []
+    for index in range(train_end, validation_end):
+            validation_data.append(data[index])
+            validation_labels.append(labels[index])
+
+    test_data = []
+    test_labels = []
+    for index in range(validation_end, len(data)):
+        test_data.append(data[index])
+        test_labels.append(labels[index])
+    print('Data split.')
+
+    print('_____________________________________________________________________________________')
+    print('Data meta data')
+    print('{:20s} {:7d}'.format('# of games', len(data_paths)))
+    print('{:20s} {:7d}'.format('# of data points', len(data)))
+    print('Split seed: ' + str(seed))
+    print('-------------------------------------------------------------------------------------')
+    print('| {:25s} | {:25s} | {:25s} |'.format('Data', '# data points', '# data point dimensions'))
+    print('|---------------------------|---------------------------|---------------------------|')
+    print('| {:25s} | {:25d} | {:25d} |'.format('train_data shape', len(train_data), len(train_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('train_labels shape', len(train_labels), len(train_labels[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('validation_data shape', len(validation_data), len(validation_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('validation_labels shape', len(validation_labels), len(validation_labels[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('test_data shape', len(test_data), len(test_data[0])))
+    print('| {:25s} | {:25d} | {:25d} |'.format('test_labels shape', len(test_labels), len(test_labels[0])))
+    print('-------------------------------------------------------------------------------------')
+
+    return np.array(train_data), np.array(train_labels), np.array(validation_data), np.array(validation_labels), np.array(test_data), np.array(test_labels)
+
+
+def load_data_part_of_game(data_path, train, validation, test, maxes_path, time_start, time_end, seed = None, ):
+    print('Loading data...')
+    # Make list of the paths to all the replays
+    data_paths = []
+    for file in os.listdir(data_path):
+        file_path = os.path.join(data_path, file)
+        if os.path.isfile(file_path) and file.lower().endswith('.npy'):
+            data_paths.append(file_path)
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    np.random.shuffle(data_paths)
+
+    train_end = int(len(data_paths) * train)
+    validation_end = int(len(data_paths) * (train + validation))
+
+    train_paths = []
+    for index in range(train_end):
+        train_paths.append(data_paths[index])
+    
+    validation_paths = []
+    for index in range(train_end, validation_end):
+        validation_paths.append(data_paths[index])
+
+    amount_train_data_points = 0
+    for path in train_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248 and time_start <= data_point[0] < time_end:
+                amount_train_data_points += 1
+
+    amount_validation_data_points = 0
+    for path in validation_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248 and time_start <= data_point[0] < time_end:
+                amount_validation_data_points += 1
+    
+    data = []
+    labels = []
+    for path in data_paths:
+        for data_point in np.load(path):
+            if len(data_point) == 248 and time_start <= data_point[0] < time_end:
+                data.append(data_point[:-54])
+                labels.append(data_point[-54:])
+    print('Data loaded.')
+
+    print('Performing L2 normalization...')
+    data = normalize(data, axis=-1, order=2)
+    print('L2 normalization done.')
+    # print('Performing min-max normalization...')
+    # min_max_norm(data, maxes_path)
+    # print('Min-max normalization done.')
     
     print('Splitting data...')
     train_end = amount_train_data_points
