@@ -59,224 +59,237 @@ def main(argv):
             0.7, 
             0.15, 
             0.15, 
-            FLAGS.seed, 
+            42, 
             FLAGS.maxes_path, 
             FLAGS.normalized_data_path
         )
 
-    input_size = train_data.shape[1]
-    num_classes = train_labels.shape[1]
+    for _ in range(5):
 
-    if FLAGS.seed is not None:
-        random.seed(FLAGS.seed)
+        input_size = train_data.shape[1]
+        num_classes = train_labels.shape[1]
 
-    min_hidden_layers = 0
-    max_hidden_layers = 5
-    min_neurons = 10
-    max_neurons = 1000
-    dropout_list = [True, False]
-    regularization_list = [True, False]
+        if FLAGS.seed is not None:
+            random.seed(FLAGS.seed)
 
-    settings_seed = 'Seed: ' + str(FLAGS.seed)
-    settings_batch_size = 'Batch size: ' + str(FLAGS.batch_size)
-    settings_max_epochs = 'Max epochs: ' + str(FLAGS.max_epochs)
-    settings_min_hidden_layers = 'min hidden layers: ' + str(min_hidden_layers)
-    settings_max_hidden_layers = 'max hidden layers: ' + str(max_hidden_layers)
-    settings_min_neurons = 'min neurons in hidden layers: ' + str(min_neurons)
-    settings_max_neurons = 'max neurons in hidden layers: ' + str(max_neurons)
-    settings_regularization = 'regularization: ' + str(regularization_list)
-    settings_dropout = 'Dropout: ' + str(dropout_list)
-    settings = settings_seed + '\n' + \
-        settings_batch_size + '\n' + \
-        settings_max_epochs + '\n' + \
-        settings_min_hidden_layers + '\n' + \
-        settings_max_hidden_layers + '\n' + \
-        settings_min_neurons + '\n' + \
-        settings_max_neurons + '\n' + \
-        settings_regularization + '\n' + \
-        settings_dropout
-    
-    with open(FLAGS.settings_file, 'w+') as f:
-        f.write(settings)
+        min_hidden_layers = 0
+        max_hidden_layers = 5
+        min_neurons = 10
+        max_neurons = 1000
+        dropout_list = [True, False]
+        regularization_list = [True, False]
 
-    print('_____________________________________________________________________________________')
-    print("Grid searching:")
-    print('-------------------------------------------------------------------------------------')
-    print(settings_min_hidden_layers)
-    print(settings_max_hidden_layers)
-    print(settings_min_neurons)
-    print(settings_max_neurons)
-    print(settings_dropout)
-    print(settings_regularization)
-    print(settings_seed)
-    print(settings_batch_size)
-    print(settings_max_epochs)
-    print('-------------------------------------------------------------------------------------')
+        settings_seed = 'Seed: ' + str(FLAGS.seed)
+        settings_batch_size = 'Batch size: ' + str(FLAGS.batch_size)
+        settings_max_epochs = 'Max epochs: ' + str(FLAGS.max_epochs)
+        settings_min_hidden_layers = 'min hidden layers: ' + str(min_hidden_layers)
+        settings_max_hidden_layers = 'max hidden layers: ' + str(max_hidden_layers)
+        settings_min_neurons = 'min neurons in hidden layers: ' + str(min_neurons)
+        settings_max_neurons = 'max neurons in hidden layers: ' + str(max_neurons)
+        settings_regularization = 'regularization: ' + str(regularization_list)
+        settings_dropout = 'Dropout: ' + str(dropout_list)
+        settings = settings_seed + '\n' + \
+            settings_batch_size + '\n' + \
+            settings_max_epochs + '\n' + \
+            settings_min_hidden_layers + '\n' + \
+            settings_max_hidden_layers + '\n' + \
+            settings_min_neurons + '\n' + \
+            settings_max_neurons + '\n' + \
+            settings_regularization + '\n' + \
+            settings_dropout
+        
+        with open(FLAGS.settings_file, 'w+') as f:
+            f.write(settings)
 
-    try:
-        for _ in range(FLAGS.experiments):
-            hidden_layers = random.randint(min_hidden_layers, max_hidden_layers)
-            neurons = random.randint(min_neurons, max_neurons)
-            dropout = random.choice(dropout_list)
-            regularization = random.choice(regularization_list)
+        print('_____________________________________________________________________________________')
+        print("Grid searching:")
+        print('-------------------------------------------------------------------------------------')
+        print(settings_min_hidden_layers)
+        print(settings_max_hidden_layers)
+        print(settings_min_neurons)
+        print(settings_max_neurons)
+        print(settings_dropout)
+        print(settings_regularization)
+        print(settings_seed)
+        print(settings_batch_size)
+        print(settings_max_epochs)
+        print('-------------------------------------------------------------------------------------')
 
-            if dropout:
-                dropout_variable = random.uniform(0.0, 0.1)
+        try:
+            for i in range(FLAGS.experiments):
+                # hidden_layers = random.randint(min_hidden_layers, max_hidden_layers)
+                # neurons = random.randint(min_neurons, max_neurons)
+                # dropout = random.choice(dropout_list)
+                # regularization = random.choice(regularization_list)
 
-            if regularization:
-                regularization_variable = random.uniform(0.0, 0.1)
+                hidden_layers = 0
+                neurons = 233
+                dropout_variable = 0.0561245062938613
+                regularization_variable = 0.07160196129224035
 
-            model_dir = 'l' + str(hidden_layers) + '_n' + str(neurons) + '_d' + str(dropout) + '_r' + str(regularization)
-            os.mkdir(model_dir)
+                dropout = True
+                regularization = True
 
-            network_settings = \
-                '# hidden layers: ' + str(hidden_layers) + '\n' + \
-                '# neurons in hidden layers: ' + str(neurons) + '\n' + \
-                (('Dropout: ' + str(dropout_variable)) if dropout else ('Dropout: ' + str(dropout))) + '\n' + \
-                (('Regularization: ' + str(regularization_variable)) if regularization else ('Regularization: ' + str(regularization))) + '\n' + \
-                '\n'
+                if dropout:
+                    dropout_variable = random.uniform(0.0, 0.1)
 
-            model_results_file = os.path.join(model_dir, 'results.txt')
+                if regularization:
+                    regularization_variable = random.uniform(0.0, 0.1)
 
-            with open(model_results_file, 'w+') as f:
-                f.write(network_settings)
+                model_dir = 'l' + str(hidden_layers) + '_n' + str(neurons) + '_d' + str(dropout) + '_r' + str(regularization)
+                # os.mkdir(model_dir)
 
-            print('=========================================================================')
-            print('Training model with')
-            print('# hidden layers: ' + str(hidden_layers))
-            print('# neurons: ' + str(neurons))
-            print(('Dropout: ' + str(dropout_variable)) if dropout else ('Dropout: ' + str(dropout)))
-            print((('Regularization: ' + str(regularization_variable)) if regularization else ('Regularization: ' + str(regularization))))
-            print('=========================================================================')
-            
-            model = keras.models.Sequential()
+                network_settings = \
+                    '# hidden layers: ' + str(hidden_layers) + '\n' + \
+                    '# neurons in hidden layers: ' + str(neurons) + '\n' + \
+                    (('Dropout: ' + str(dropout_variable)) if dropout else ('Dropout: ' + str(dropout))) + '\n' + \
+                    (('Regularization: ' + str(regularization_variable)) if regularization else ('Regularization: ' + str(regularization))) + '\n' + \
+                    '\n'
 
-            model.add(layers.Dense(neurons, activation=tf.nn.relu, input_shape=(input_size,)))
+                model_results_file = os.path.join(model_dir, 'results.txt')
 
-            for _ in range(hidden_layers):
+                with open(model_results_file, 'a') as f:
+                    f.write(network_settings)
+
+                print('=========================================================================')
+                print('Training model with')
+                print('# hidden layers: ' + str(hidden_layers))
+                print('# neurons: ' + str(neurons))
+                print(('Dropout: ' + str(dropout_variable)) if dropout else ('Dropout: ' + str(dropout)))
+                print((('Regularization: ' + str(regularization_variable)) if regularization else ('Regularization: ' + str(regularization))))
+                print('=========================================================================')
+                
+                model = keras.models.Sequential()
+
+                model.add(layers.Dense(neurons, activation=tf.nn.relu, input_shape=(input_size,)))
+
+                for _ in range(hidden_layers):
+                    if dropout:
+                        model.add(layers.Dropout(dropout_variable))
+                    
+                    if regularization:
+                        model.add(layers.Dense(neurons, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(regularization_variable)))
+                    else:
+                        model.add(layers.Dense(neurons, activation=tf.nn.relu))
+
                 if dropout:
                     model.add(layers.Dropout(dropout_variable))
+
+                model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
+
+                model.summary()
+
+                model.compile(loss=losses.categorical_crossentropy,
+                            optimizer=optimizers.Adam(),
+                            metrics=[utils.top_1_categorical_accuracy, utils.top_3_categorical_accuracy])
+
+                os.mkdir(os.path.join(model_dir, str(i)))
+                best_model_path = os.path.join(model_dir, str(i), 'model.h5')
+
+                es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='min')
+                mc = callbacks.ModelCheckpoint(best_model_path, monitor='val_loss', mode='min', save_best_only=True)
+                history = model.fit(
+                    train_data, 
+                    train_labels, 
+                    validation_data=(validation_data, validation_labels),
+                    epochs=FLAGS.max_epochs,
+                    batch_size=FLAGS.batch_size,
+                    verbose = 1,
+                    callbacks=[es, mc]
+                )
+
+                model = models.load_model(best_model_path, {"top_1_categorical_accuracy": utils.top_1_categorical_accuracy, "top_3_categorical_accuracy": utils.top_3_categorical_accuracy})
+
+                scores = model.evaluate(
+                    x=test_data, 
+                    y=test_labels, 
+                    batch_size=FLAGS.batch_size, 
+                    verbose=0
+                )
+
+                print('Final model scores:')
+
+                results = ''
+                for index in range(len(model.metrics_names)):
+                    results += '%s: %.4f' % (model.metrics_names[index], scores[index])
+                    results += '\n'
+                    print('%s: %.4f' % (model.metrics_names[index], scores[index]))
+
+                with open(model_results_file, 'a') as f:
+                    f.write(results)
+
+                # name = 'model.h5'
+                # path = os.path.join(model_dir, name)
+                # model.save(path)
+
+                name = 'top_1'
+                path = os.path.join(model_dir, str(i), name)
+                np.save(path , history.history['top_1_categorical_accuracy'])
+
+                name = 'val_top_1'
+                path = os.path.join(model_dir, str(i), name)
+                np.save(path , history.history['val_top_1_categorical_accuracy'])
+
+                name = 'top_3'
+                path = os.path.join(model_dir, str(i), name)
+                np.save(path , history.history['top_3_categorical_accuracy'])
+
+                name = 'val_top_3'
+                path = os.path.join(model_dir, str(i), name)
+                np.save(path , history.history['val_top_3_categorical_accuracy'])
                 
-                if regularization:
-                    model.add(layers.Dense(neurons, activation=tf.nn.relu, kernel_regularizer=regularizers.l2(regularization_variable)))
-                else:
-                    model.add(layers.Dense(neurons, activation=tf.nn.relu))
+                name = 'loss'
+                path = os.path.join(model_dir, str(i), name)
+                np.save(path , history.history['loss'])
 
-            if dropout:
-                model.add(layers.Dropout(dropout_variable))
+                name = 'val_loss'
+                path = os.path.join(model_dir, str(i), name)
+                np.save(path , history.history['val_loss'])
 
-            model.add(keras.layers.Dense(num_classes, activation=tf.nn.softmax))
+                # Plot training & validation top-1 accuracy values
+                plt.figure()
+                plt.plot(history.history['top_1_categorical_accuracy'])
+                plt.plot(history.history['val_top_1_categorical_accuracy'])
+                plt.title('Top-1 Model Accuracy')
+                plt.ylabel('Accuracy')
+                plt.xlabel('Epoch')
+                plt.legend(['Train', 'Test'], loc='upper left')
+                name = 'top_1.png'
+                path = os.path.join(model_dir, str(i), name)
+                plt.savefig(path)
+                plt.close()
 
-            model.summary()
+                # Plot training & validation top-3 accuracy values
+                plt.figure()
+                plt.plot(history.history['top_3_categorical_accuracy'])
+                plt.plot(history.history['val_top_3_categorical_accuracy'])
+                plt.title('Top-3 Model Accuracy')
+                plt.ylabel('Accuracy')
+                plt.xlabel('Epoch')
+                plt.legend(['Train', 'Test'], loc='upper left')
+                name = 'top_3.png'
+                path = os.path.join(model_dir, str(i), name)
+                plt.savefig(path)
+                plt.close()
 
-            model.compile(loss=losses.categorical_crossentropy,
-                        optimizer=optimizers.Adam(),
-                        metrics=[utils.top_1_categorical_accuracy, utils.top_3_categorical_accuracy])
+                # Plot training & validation loss values
+                plt.figure()
+                plt.plot(history.history['loss'])
+                plt.plot(history.history['val_loss'])
+                plt.title('Model loss')
+                plt.ylabel('Loss')
+                plt.xlabel('Epoch')
+                plt.legend(['Train', 'Test'], loc='upper left')
+                name = 'loss.png'
+                path = os.path.join(model_dir, str(i), name)
+                plt.savefig(path)
+                plt.close()
 
-            best_model_path = os.path.join(model_dir, 'best_model.h5')
-
-            es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='min')
-            mc = callbacks.ModelCheckpoint(best_model_path, monitor='val_loss', mode='min', save_best_only=True)
-            history = model.fit(
-                train_data, 
-                train_labels, 
-                validation_data=(validation_data, validation_labels),
-                epochs=FLAGS.max_epochs,
-                batch_size=FLAGS.batch_size,
-                verbose = 0,
-                callbacks=[es, mc]
-            )
-
-            scores = model.evaluate(
-                x=test_data, 
-                y=test_labels, 
-                batch_size=FLAGS.batch_size, 
-                verbose=0
-            )
-
-            print('Final model scores:')
-
-            results = ''
-            for index in range(len(model.metrics_names)):
-                results += '%s: %.2f%%' % (model.metrics_names[index], scores[index]*100)
-                results += '\n'
-                print('%s: %.2f%%' % (model.metrics_names[index], scores[index]*100))
-
-            with open(model_results_file, 'a') as f:
-                f.write(results)
-
-            name = 'model.h5'
-            path = os.path.join(model_dir, name)
-            model.save(path)
-
-            name = 'top_1'
-            path = os.path.join(model_dir, name)
-            np.save(path , history.history['top_1_categorical_accuracy'])
-
-            name = 'val_top_1'
-            path = os.path.join(model_dir, name)
-            np.save(path , history.history['val_top_1_categorical_accuracy'])
-
-            name = 'top_3'
-            path = os.path.join(model_dir, name)
-            np.save(path , history.history['top_3_categorical_accuracy'])
-
-            name = 'val_top_3'
-            path = os.path.join(model_dir, name)
-            np.save(path , history.history['val_top_3_categorical_accuracy'])
-            
-            name = 'loss'
-            path = os.path.join(model_dir, name)
-            np.save(path , history.history['loss'])
-
-            name = 'val_loss'
-            path = os.path.join(model_dir, name)
-            np.save(path , history.history['val_loss'])
-
-            # Plot training & validation top-1 accuracy values
-            plt.figure()
-            plt.plot(history.history['top_1_categorical_accuracy'])
-            plt.plot(history.history['val_top_1_categorical_accuracy'])
-            plt.title('Top-1 Model Accuracy')
-            plt.ylabel('Accuracy')
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
-            name = 'top_1.png'
-            path = os.path.join(model_dir, name)
-            plt.savefig(path)
-            plt.close()
-
-            # Plot training & validation top-3 accuracy values
-            plt.figure()
-            plt.plot(history.history['top_3_categorical_accuracy'])
-            plt.plot(history.history['val_top_3_categorical_accuracy'])
-            plt.title('Top-3 Model Accuracy')
-            plt.ylabel('Accuracy')
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
-            name = 'top_3.png'
-            path = os.path.join(model_dir, name)
-            plt.savefig(path)
-            plt.close()
-
-            # Plot training & validation loss values
-            plt.figure()
-            plt.plot(history.history['loss'])
-            plt.plot(history.history['val_loss'])
-            plt.title('Model loss')
-            plt.ylabel('Loss')
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
-            name = 'loss.png'
-            path = os.path.join(model_dir, name)
-            plt.savefig(path)
-            plt.close()
-
-            print('=========================================================================')
-            print('Finished with model')
-            print('=========================================================================')
-    except KeyboardInterrupt:
-        return
+                print('=========================================================================')
+                print('Finished with model')
+                print('=========================================================================')
+        except KeyboardInterrupt:
+            return
 
 
 if __name__ == "__main__":
